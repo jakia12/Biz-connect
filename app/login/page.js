@@ -6,9 +6,27 @@
 'use client';
 
 import Button from '@/components/ui/Button';
+import FormField from '@/components/ui/FormField';
+import { loginSchema } from '@/lib/validation-schemas';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
 
 export default function LoginPage() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    mode: 'onBlur'
+  });
+
+  const onSubmit = (data) => {
+    console.log('Login Data:', data);
+    // Handle login logic here
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-body flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
@@ -25,22 +43,17 @@ export default function LoginPage() {
 
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                placeholder="you@example.com"
-              />
-            </div>
+            <FormField
+              label="Email address"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              register={register}
+              error={errors.email}
+              required
+            />
 
             {/* Password */}
             <div>
@@ -52,14 +65,13 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <input
-                id="password"
+              <FormField
                 name="password"
                 type="password"
-                autoComplete="current-password"
-                required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 placeholder="••••••••"
+                register={register}
+                error={errors.password}
+                required
               />
             </div>
 
@@ -67,9 +79,9 @@ export default function LoginPage() {
             <div className="flex items-center">
               <input
                 id="remember"
-                name="remember"
                 type="checkbox"
                 className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                {...register('remember')}
               />
               <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
                 Remember me
@@ -77,8 +89,13 @@ export default function LoginPage() {
             </div>
 
             {/* Submit Button */}
-            <Button variant="primary" className="w-full justify-center py-3 text-base font-bold shadow-colored">
-              Sign in
+            <Button 
+              type="submit" 
+              variant="primary" 
+              className="w-full justify-center py-3 text-base font-bold shadow-colored"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
 
@@ -94,7 +111,7 @@ export default function LoginPage() {
 
           {/* Social Login */}
           <div className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <button type="button" className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -103,7 +120,7 @@ export default function LoginPage() {
               </svg>
               <span className="text-sm font-medium text-gray-700">Google</span>
             </button>
-            <button className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <button type="button" className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
               <svg className="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>

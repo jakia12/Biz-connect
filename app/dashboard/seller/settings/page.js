@@ -6,35 +6,53 @@
 'use client';
 
 import Button from '@/components/ui/Button';
+import FormField from '@/components/ui/FormField';
+import { passwordChangeSchema, sellerSettingsSchema } from '@/lib/validation-schemas';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 export default function SellerSettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
 
-  const [profileData, setProfileData] = useState({
-    businessName: 'Creative Studio BD',
-    email: 'contact@creativestudio.bd',
-    phone: '+880 1712 345678',
-    address: 'House 12, Road 5, Dhanmondi, Dhaka',
-    description: 'Professional design studio specializing in branding and digital marketing.',
-    avatar: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=200&h=200&fit=crop'
+  // Profile Form
+  const {
+    register: registerProfile,
+    handleSubmit: handleProfileSubmit,
+    formState: { errors: profileErrors, isSubmitting: isProfileSubmitting }
+  } = useForm({
+    resolver: zodResolver(sellerSettingsSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      businessName: 'Creative Studio BD',
+      email: 'contact@creativestudio.bd',
+      phone: '+880 1712 345678',
+      address: 'House 12, Road 5, Dhanmondi, Dhaka',
+      description: 'Professional design studio specializing in branding and digital marketing.',
+    }
   });
 
-  const [passwordData, setPasswordData] = useState({
-    current: '',
-    new: '',
-    confirm: ''
+  // Password Form
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    reset: resetPassword,
+    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting }
+  } = useForm({
+    resolver: zodResolver(passwordChangeSchema),
+    mode: 'onBlur'
   });
 
-  const handleSaveProfile = (e) => {
-    e.preventDefault();
-    console.log('Profile updated:', profileData);
+  const onProfileSubmit = (data) => {
+    console.log('Profile updated:', data);
+    // Handle profile update
   };
 
-  const handleSavePassword = (e) => {
-    e.preventDefault();
-    console.log('Password updated');
+  const onPasswordSubmit = (data) => {
+    console.log('Password updated:', data);
+    // Handle password update
+    resetPassword();
   };
 
   return (
@@ -89,72 +107,80 @@ export default function SellerSettingsPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Business Profile</h2>
               
-              <form onSubmit={handleSaveProfile}>
+              <form onSubmit={handleProfileSubmit(onProfileSubmit)}>
                 {/* Avatar Upload */}
                 <div className="mb-8 flex items-center gap-6">
                   <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
-                    <Image src={profileData.avatar} alt="Business Logo" fill className="object-cover" />
+                    <Image 
+                      src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=200&h=200&fit=crop" 
+                      alt="Business Logo" 
+                      fill 
+                      className="object-cover" 
+                    />
                   </div>
                   <div>
-                    <Button variant="outline" size="sm" className="mb-2">Change Logo</Button>
+                    <Button type="button" variant="outline" size="sm" className="mb-2">Change Logo</Button>
                     <p className="text-xs text-gray-500">JPG, GIF or PNG. Max size of 800K</p>
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
-                    <input
-                      type="text"
-                      value={profileData.businessName}
-                      onChange={(e) => setProfileData({...profileData, businessName: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                    />
-                  </div>
+                  <FormField
+                    label="Business Name"
+                    name="businessName"
+                    register={registerProfile}
+                    error={profileErrors.businessName}
+                    required
+                  />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                      <input
-                        type="email"
-                        value={profileData.email}
-                        onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                      <input
-                        type="tel"
-                        value={profileData.phone}
-                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Business Address</label>
-                    <textarea
-                      value={profileData.address}
-                      onChange={(e) => setProfileData({...profileData, address: e.target.value})}
-                      rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                    <FormField
+                      label="Email Address"
+                      name="email"
+                      type="email"
+                      register={registerProfile}
+                      error={profileErrors.email}
+                      required
+                    />
+                    <FormField
+                      label="Phone Number"
+                      name="phone"
+                      type="tel"
+                      register={registerProfile}
+                      error={profileErrors.phone}
+                      required
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Business Description</label>
-                    <textarea
-                      value={profileData.description}
-                      onChange={(e) => setProfileData({...profileData, description: e.target.value})}
-                      rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                    />
-                  </div>
+                  <FormField
+                    label="Business Address"
+                    name="address"
+                    type="textarea"
+                    rows={3}
+                    register={registerProfile}
+                    error={profileErrors.address}
+                    required
+                  />
+
+                  <FormField
+                    label="Business Description"
+                    name="description"
+                    type="textarea"
+                    rows={4}
+                    register={registerProfile}
+                    error={profileErrors.description}
+                    required
+                  />
                 </div>
 
-                <Button type="submit" variant="primary" className="mt-6">Save Changes</Button>
+                <Button 
+                  type="submit" 
+                  variant="primary" 
+                  className="mt-6"
+                  disabled={isProfileSubmitting}
+                >
+                  {isProfileSubmitting ? 'Saving...' : 'Save Changes'}
+                </Button>
               </form>
             </div>
           )}
@@ -164,36 +190,39 @@ export default function SellerSettingsPage() {
             <div className="bg-white rounded-xl border border-gray-200 p-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Change Password</h2>
               
-              <form onSubmit={handleSavePassword} className="max-w-md space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                  <input
-                    type="password"
-                    value={passwordData.current}
-                    onChange={(e) => setPasswordData({...passwordData, current: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                  <input
-                    type="password"
-                    value={passwordData.new}
-                    onChange={(e) => setPasswordData({...passwordData, new: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                  <input
-                    type="password"
-                    value={passwordData.confirm}
-                    onChange={(e) => setPasswordData({...passwordData, confirm: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                  />
-                </div>
+              <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="max-w-md space-y-6">
+                <FormField
+                  label="Current Password"
+                  name="currentPassword"
+                  type="password"
+                  register={registerPassword}
+                  error={passwordErrors.currentPassword}
+                  required
+                />
+                <FormField
+                  label="New Password"
+                  name="newPassword"
+                  type="password"
+                  register={registerPassword}
+                  error={passwordErrors.newPassword}
+                  required
+                />
+                <FormField
+                  label="Confirm New Password"
+                  name="confirmPassword"
+                  type="password"
+                  register={registerPassword}
+                  error={passwordErrors.confirmPassword}
+                  required
+                />
 
-                <Button type="submit" variant="primary">Update Password</Button>
+                <Button 
+                  type="submit" 
+                  variant="primary"
+                  disabled={isPasswordSubmitting}
+                >
+                  {isPasswordSubmitting ? 'Updating...' : 'Update Password'}
+                </Button>
               </form>
             </div>
           )}

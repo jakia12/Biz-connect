@@ -8,10 +8,28 @@
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
 import Button from '@/components/ui/Button';
+import FormField from '@/components/ui/FormField';
+import { contactSchema } from '@/lib/validation-schemas';
 import { fadeInUp, staggerContainer } from '@/utils/animations';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
+import { useForm } from 'react-hook-form';
 
 export default function ContactPage() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(contactSchema),
+    mode: 'onBlur'
+  });
+
+  const onSubmit = (data) => {
+    console.log('Contact Data:', data);
+    // Handle contact form submission
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-body">
       <Navbar />
@@ -59,51 +77,63 @@ export default function ContactPage() {
               variants={fadeInUp}
             >
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
-              <form className="space-y-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                    <input 
-                      type="text" 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                      placeholder="John"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                    <input 
-                      type="text" 
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                      placeholder="Doe"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input 
-                    type="email" 
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                    placeholder="john@example.com"
+                  <FormField
+                    label="First Name"
+                    name="firstName"
+                    placeholder="John"
+                    register={register}
+                    error={errors.firstName}
+                    required
+                  />
+                  <FormField
+                    label="Last Name"
+                    name="lastName"
+                    placeholder="Doe"
+                    register={register}
+                    error={errors.lastName}
+                    required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-                  <input 
-                    type="text" 
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                    placeholder="How can we help?"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                  <textarea 
-                    rows={5}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                    placeholder="Tell us more..."
-                  />
-                </div>
-                <Button variant="primary" className="w-full justify-center py-3">
-                  Send Message
+                
+                <FormField
+                  label="Email"
+                  name="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  register={register}
+                  error={errors.email}
+                  required
+                />
+                
+                <FormField
+                  label="Subject"
+                  name="subject"
+                  placeholder="How can we help?"
+                  register={register}
+                  error={errors.subject}
+                  required
+                />
+                
+                <FormField
+                  label="Message"
+                  name="message"
+                  type="textarea"
+                  rows={5}
+                  placeholder="Tell us more..."
+                  register={register}
+                  error={errors.message}
+                  required
+                />
+                
+                <Button 
+                  type="submit" 
+                  variant="primary" 
+                  className="w-full justify-center py-3"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </Button>
               </form>
             </motion.div>

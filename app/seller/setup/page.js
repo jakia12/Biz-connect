@@ -6,34 +6,65 @@
 'use client';
 
 import Button from '@/components/ui/Button';
+import FormField from '@/components/ui/FormField';
+import {
+  sellerSetupStep1Schema,
+  sellerSetupStep2Schema,
+  sellerSetupStep3Schema
+} from '@/lib/validation-schemas';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+// Merge schemas for the full form
+const sellerSetupSchema = z.object({
+  ...sellerSetupStep1Schema.shape,
+  ...sellerSetupStep2Schema.shape,
+  ...sellerSetupStep3Schema.shape
+});
 
 export default function SellerProfileSetup() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    // Step 1: Basic Info
-    businessName: '',
-    businessType: '',
-    category: '',
-    
-    // Step 2: Business Details
-    description: '',
-    address: '',
-    city: '',
-    phone: '',
-    website: '',
-    
-    // Step 3: Verification
-    tradeLicense: null,
-    taxId: '',
-    bankAccount: ''
+  
+  const {
+    register,
+    handleSubmit,
+    trigger,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(sellerSetupSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      businessType: 'Product Seller',
+      category: ''
+    }
   });
 
+  const formValues = watch();
+
   const steps = [
-    { number: 1, title: 'Basic Info', icon: '📋' },
-    { number: 2, title: 'Business Details', icon: '🏢' },
-    { number: 3, title: 'Verification', icon: '✓' }
+    { 
+      number: 1, 
+      title: 'Basic Info', 
+      icon: '📋',
+      fields: ['businessName', 'businessType', 'category']
+    },
+    { 
+      number: 2, 
+      title: 'Business Details', 
+      icon: '🏢',
+      fields: ['description', 'address', 'city', 'phone', 'website']
+    },
+    { 
+      number: 3, 
+      title: 'Verification', 
+      icon: '✓',
+      fields: ['tradeLicense', 'taxId', 'bankAccount']
+    }
   ];
 
   const businessTypes = ['Product Seller', 'Service Provider', 'Both'];
@@ -46,17 +77,28 @@ export default function SellerProfileSetup() {
     'Web Development'
   ];
 
-  const handleNext = () => {
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
+  const handleNext = async () => {
+    const fieldsToValidate = steps[currentStep - 1].fields;
+    const isStepValid = await trigger(fieldsToValidate);
+
+    if (isStepValid) {
+      if (currentStep < 3) {
+        setCurrentStep(currentStep + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
   };
 
   const handleBack = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
-  const handleSubmit = () => {
+  const onSubmit = (data) => {
+    console.log('Seller Setup Data:', data);
     // Handle form submission
-    console.log('Form submitted:', formData);
   };
 
   return (
@@ -104,24 +146,19 @@ export default function SellerProfileSetup() {
 
         {/* Form Card */}
         <div className="bg-white rounded-xl border border-gray-200 p-8">
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             
             {/* Step 1: Basic Info */}
             {currentStep === 1 && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Business Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.businessName}
-                    onChange={(e) => setFormData({...formData, businessName: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    placeholder="Enter your business name"
-                    required
-                  />
-                </div>
+                <FormField
+                  label="Business Name"
+                  name="businessName"
+                  placeholder="Enter your business name"
+                  register={register}
+                  error={errors.businessName}
+                  required
+                />
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -132,9 +169,9 @@ export default function SellerProfileSetup() {
                       <button
                         key={type}
                         type="button"
-                        onClick={() => setFormData({...formData, businessType: type})}
+                        onClick={() => setValue('businessType', type, { shouldValidate: true })}
                         className={`p-4 border-2 rounded-lg text-center transition-all ${
-                          formData.businessType === type
+                          formValues.businessType === type
                             ? 'border-primary bg-primary/5'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
@@ -143,99 +180,78 @@ export default function SellerProfileSetup() {
                       </button>
                     ))}
                   </div>
+                  <input type="hidden" {...register('businessType')} />
+                  {errors.businessType && (
+                    <p className="text-red-500 text-xs mt-1">{errors.businessType.message}</p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Primary Category *
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
+                <FormField
+                  label="Primary Category"
+                  name="category"
+                  type="select"
+                  options={[
+                    { value: '', label: 'Select a category' },
+                    ...categories.map(cat => ({ value: cat, label: cat }))
+                  ]}
+                  register={register}
+                  error={errors.category}
+                  required
+                />
               </>
             )}
 
             {/* Step 2: Business Details */}
             {currentStep === 2 && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Business Description *
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                    placeholder="Tell customers about your business..."
+                <FormField
+                  label="Business Description"
+                  name="description"
+                  type="textarea"
+                  rows={4}
+                  placeholder="Tell customers about your business..."
+                  register={register}
+                  error={errors.description}
+                  required
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    label="Address"
+                    name="address"
+                    placeholder="Street address"
+                    register={register}
+                    error={errors.address}
+                    required
+                  />
+                  <FormField
+                    label="City"
+                    name="city"
+                    placeholder="City"
+                    register={register}
+                    error={errors.city}
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Address *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.address}
-                      onChange={(e) => setFormData({...formData, address: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                      placeholder="Street address"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      City *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                      placeholder="City"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                      placeholder="+880 1XXX-XXXXXX"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Website (Optional)
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.website}
-                      onChange={(e) => setFormData({...formData, website: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                      placeholder="https://yourwebsite.com"
-                    />
-                  </div>
+                  <FormField
+                    label="Phone Number"
+                    name="phone"
+                    type="tel"
+                    placeholder="+880 1XXX-XXXXXX"
+                    register={register}
+                    error={errors.phone}
+                    required
+                  />
+                  <FormField
+                    label="Website (Optional)"
+                    name="website"
+                    type="url"
+                    placeholder="https://yourwebsite.com"
+                    register={register}
+                    error={errors.website}
+                  />
                 </div>
               </>
             )}
@@ -259,41 +275,39 @@ export default function SellerProfileSetup() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Trade License / Business Registration
                   </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer relative">
+                    <input 
+                      type="file" 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      {...register('tradeLicense')}
+                    />
                     <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                     <p className="text-sm text-gray-600 mb-1">Click to upload or drag and drop</p>
                     <p className="text-xs text-gray-500">PDF, JPG or PNG (max. 5MB)</p>
-                    <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
                   </div>
+                  {errors.tradeLicense && (
+                    <p className="text-red-500 text-xs mt-1">{errors.tradeLicense.message}</p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tax ID / NID Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.taxId}
-                    onChange={(e) => setFormData({...formData, taxId: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                    placeholder="Enter your Tax ID or NID"
-                  />
-                </div>
+                <FormField
+                  label="Tax ID / NID Number"
+                  name="taxId"
+                  placeholder="Enter your Tax ID or NID"
+                  register={register}
+                  error={errors.taxId}
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bank Account Number (for payments)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.bankAccount}
-                    onChange={(e) => setFormData({...formData, bankAccount: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                    placeholder="Enter your bank account number"
-                  />
-                </div>
+                <FormField
+                  label="Bank Account Number (for payments)"
+                  name="bankAccount"
+                  placeholder="Enter your bank account number"
+                  register={register}
+                  error={errors.bankAccount}
+                />
               </>
             )}
 
@@ -319,12 +333,12 @@ export default function SellerProfileSetup() {
                 </Button>
               ) : (
                 <Button
-                  type="button"
-                  onClick={handleSubmit}
+                  type="submit"
                   variant="primary"
                   className="px-8 py-3"
+                  disabled={isSubmitting}
                 >
-                  Complete Setup
+                  {isSubmitting ? 'Completing Setup...' : 'Complete Setup'}
                 </Button>
               )}
             </div>

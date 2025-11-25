@@ -6,27 +6,44 @@
 'use client';
 
 import Button from '@/components/ui/Button';
+import FormField from '@/components/ui/FormField';
+import { productSchema } from '@/lib/validation-schemas';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 export default function EditProductPage({ params }) {
-  const [productType, setProductType] = useState('service');
-  const [formData, setFormData] = useState({
-    title: 'Professional Business Logo Design',
-    category: 'Graphics & Design',
-    price: '1500',
-    description: 'Get a professional, unique logo design for your business. Our experienced designers will create a custom logo that perfectly represents your brand identity.',
-    deliveryTime: '3-5 days',
-    stock: '',
-    tags: 'logo, design, branding',
-    status: 'active'
-  });
-
   const [existingImages] = useState([
     'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop'
   ]);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(productSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      name: 'Professional Business Logo Design',
+      category: 'Graphics & Design',
+      price: 1500,
+      description: 'Get a professional, unique logo design for your business. Our experienced designers will create a custom logo that perfectly represents your brand identity.',
+      stock: 0,
+      type: 'service', // Not in schema but useful for UI
+      status: 'active',
+      deliveryTime: '3-5 days',
+      tags: 'logo, design, branding'
+    }
+  });
+
+  const productType = watch('type');
+  const status = watch('status');
 
   const categories = [
     'Graphics & Design',
@@ -38,9 +55,8 @@ export default function EditProductPage({ params }) {
     'Home & Living'
   ];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Product updated:', formData);
+  const handleSubmitForm = (data) => {
+    console.log('Product updated:', data);
     // Handle product update
   };
 
@@ -78,15 +94,14 @@ export default function EditProductPage({ params }) {
         
         {/* Main Form */}
         <div className="lg:col-span-2">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(handleSubmitForm)} className="space-y-6">
             
             {/* Status */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h3 className="font-bold text-gray-900 mb-4">Status</h3>
               <select
-                value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                {...register('status')}
               >
                 <option value="active">Active</option>
                 <option value="draft">Draft</option>
@@ -100,7 +115,7 @@ export default function EditProductPage({ params }) {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
-                  onClick={() => setProductType('product')}
+                  onClick={() => setValue('type', 'product')}
                   className={`p-4 border-2 rounded-lg text-center transition-all ${
                     productType === 'product'
                       ? 'border-primary bg-primary/5'
@@ -114,7 +129,7 @@ export default function EditProductPage({ params }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setProductType('service')}
+                  onClick={() => setValue('type', 'service')}
                   className={`p-4 border-2 rounded-lg text-center transition-all ${
                     productType === 'service'
                       ? 'border-primary bg-primary/5'
@@ -134,61 +149,50 @@ export default function EditProductPage({ params }) {
               <h3 className="font-bold text-gray-900 mb-4">Basic Information</h3>
               
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                    required
-                  />
-                </div>
+                <FormField
+                  label="Title"
+                  name="name"
+                  placeholder="e.g., Professional Logo Design"
+                  register={register}
+                  error={errors.name}
+                  required
+                />
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category *
-                    </label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                      required
-                    >
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Price (৳) *
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) => setFormData({...formData, price: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description *
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    rows={6}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                  <FormField
+                    label="Category"
+                    name="category"
+                    type="select"
+                    options={[
+                      { value: '', label: 'Select category' },
+                      ...categories.map(cat => ({ value: cat, label: cat }))
+                    ]}
+                    register={register}
+                    error={errors.category}
                     required
                   />
+                  <FormField
+                    label="Price (৳)"
+                    name="price"
+                    type="number"
+                    placeholder="1500"
+                    register={register}
+                    error={errors.price}
+                    required
+                    valueAsNumber
+                  />
                 </div>
+
+                <FormField
+                  label="Description"
+                  name="description"
+                  type="textarea"
+                  rows={6}
+                  placeholder="Describe your product or service in detail..."
+                  register={register}
+                  error={errors.description}
+                  required
+                />
               </div>
             </div>
 
@@ -204,16 +208,18 @@ export default function EditProductPage({ params }) {
                   {productType === 'service' ? (
                     <input
                       type="text"
-                      value={formData.deliveryTime}
-                      onChange={(e) => setFormData({...formData, deliveryTime: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                      placeholder="e.g., 3-5 days"
+                      {...register('deliveryTime')}
                     />
                   ) : (
-                    <input
+                    <FormField
+                      name="stock"
                       type="number"
-                      value={formData.stock}
-                      onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                      placeholder="100"
+                      register={register}
+                      error={errors.stock}
+                      valueAsNumber
                     />
                   )}
                 </div>
@@ -223,9 +229,9 @@ export default function EditProductPage({ params }) {
                   </label>
                   <input
                     type="text"
-                    value={formData.tags}
-                    onChange={(e) => setFormData({...formData, tags: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                    placeholder="logo, design, branding"
+                    {...register('tags')}
                   />
                 </div>
               </div>
@@ -249,22 +255,27 @@ export default function EditProductPage({ params }) {
                     </button>
                   </div>
                 ))}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg aspect-square flex items-center justify-center hover:border-primary transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg aspect-square flex items-center justify-center hover:border-primary transition-colors cursor-pointer relative">
                   <div className="text-center">
                     <svg className="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     <p className="text-xs text-gray-500">Add Image</p>
                   </div>
-                  <input type="file" className="hidden" accept="image/*" />
+                  <input type="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" />
                 </div>
               </div>
             </div>
 
             {/* Submit Buttons */}
             <div className="flex items-center gap-4">
-              <Button type="submit" variant="primary" className="flex-1">
-                Update Product
+              <Button 
+                type="submit" 
+                variant="primary" 
+                className="flex-1"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Updating...' : 'Update Product'}
               </Button>
               <Link href="/dashboard/seller/products" className="flex-1">
                 <Button type="button" variant="outline" className="w-full">

@@ -6,14 +6,33 @@
 'use client';
 
 import Button from '@/components/ui/Button';
+import FormField from '@/components/ui/FormField';
+import { reviewSchema } from '@/lib/validation-schemas';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 export default function LeaveReviewPage({ params }) {
-  const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
-  const [review, setReview] = useState('');
+  
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(reviewSchema),
+    mode: 'onBlur',
+    defaultValues: {
+      rating: 0,
+      comment: ''
+    }
+  });
+
+  const rating = watch('rating');
 
   // Mock data
   const order = {
@@ -28,9 +47,8 @@ export default function LeaveReviewPage({ params }) {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Review submitted:', { rating, review });
+  const onSubmit = (data) => {
+    console.log('Review submitted:', data);
     // Handle review submission
   };
 
@@ -69,7 +87,7 @@ export default function LeaveReviewPage({ params }) {
 
         {/* Review Form */}
         <div className="bg-white rounded-xl border border-gray-200 p-8">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             
             {/* Rating */}
             <div className="mb-8">
@@ -79,10 +97,10 @@ export default function LeaveReviewPage({ params }) {
                   <button
                     key={star}
                     type="button"
-                    onClick={() => setRating(star)}
+                    onClick={() => setValue('rating', star, { shouldValidate: true })}
                     onMouseEnter={() => setHoveredRating(star)}
                     onMouseLeave={() => setHoveredRating(0)}
-                    className="transition-transform hover:scale-110"
+                    className="transition-transform hover:scale-110 focus:outline-none"
                   >
                     <svg 
                       className={`w-10 h-10 ${
@@ -113,25 +131,28 @@ export default function LeaveReviewPage({ params }) {
                   </span>
                 )}
               </div>
+              <input type="hidden" {...register('rating', { valueAsNumber: true })} />
+              {errors.rating && (
+                <p className="text-red-500 text-xs mt-1">{errors.rating.message}</p>
+              )}
             </div>
 
             {/* Review Text */}
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Your Review *</label>
-              <textarea
-                value={review}
-                onChange={(e) => setReview(e.target.value)}
-                rows={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                placeholder="Share your experience with this product/service..."
-                required
-              />
-              <p className="text-xs text-gray-500 mt-2">Minimum 20 characters</p>
-            </div>
+            <FormField
+              label="Your Review"
+              name="comment"
+              type="textarea"
+              rows={6}
+              placeholder="Share your experience with this product/service..."
+              register={register}
+              error={errors.comment}
+              required
+            />
+            <p className="text-xs text-gray-500 mt-2 mb-8">Minimum 10 characters</p>
 
-            {/* Quality Ratings */}
+            {/* Quality Ratings (Optional/Visual only for now as per schema) */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-4">Rate Specific Aspects</label>
+              <label className="block text-sm font-medium text-gray-700 mb-4">Rate Specific Aspects (Optional)</label>
               <div className="space-y-4">
                 {[
                   { label: 'Quality', key: 'quality' },
@@ -145,7 +166,7 @@ export default function LeaveReviewPage({ params }) {
                         <button
                           key={star}
                           type="button"
-                          className="transition-transform hover:scale-110"
+                          className="transition-transform hover:scale-110 focus:outline-none"
                         >
                           <svg className="w-6 h-6 text-gray-300 hover:text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -164,9 +185,9 @@ export default function LeaveReviewPage({ params }) {
                 type="submit" 
                 variant="primary" 
                 className="flex-1"
-                disabled={rating === 0 || review.length < 20}
+                disabled={isSubmitting}
               >
-                Submit Review
+                {isSubmitting ? 'Submitting...' : 'Submit Review'}
               </Button>
               <Link href="/dashboard/buyer/orders" className="flex-1">
                 <Button type="button" variant="outline" className="w-full">Cancel</Button>
