@@ -3,6 +3,9 @@
  * Compact, data-rich, square aspect ratio
  */
 
+'use client';
+
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -24,7 +27,11 @@ export default function ProductCard({ product, className = '' }) {
   const discountPercent = discount || (originalPrice ? `-${Math.round(((originalPrice - price) / originalPrice) * 100)}%` : null);
 
   return (
-    <div className={`group bg-white border border-gray-100 rounded-md hover:shadow-lg transition-all duration-200 overflow-hidden ${className}`}>
+    <motion.div 
+      className={`group bg-white border border-gray-100 rounded-md overflow-hidden ${className}`}
+      whileHover={{ y: -6, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    >
       <Link href={`/products/${id}`} className="block">
         {/* Product Image - Square 1:1 */}
         <div className="relative w-full aspect-square bg-gray-100">
@@ -78,6 +85,6 @@ export default function ProductCard({ product, className = '' }) {
           </div>
         </div>
       </Link>
-    </div>
+    </motion.div>
   );
 }

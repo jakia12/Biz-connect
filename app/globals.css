@@ -14,6 +14,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -23,6 +24,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 /* Utility Classes */
@@ -36,4 +38,205 @@ body {
 
 .shadow-colored {
   box-shadow: 0 4px 14px 0 rgba(11, 182, 155, 0.25);
+}
+
+/* Button Base Styles */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-300 ease-out;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    transform: translateY(0);
+  }
+
+  /* Button Sizes */
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-md {
+    @apply px-5 py-2.5 text-base;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-lg;
+  }
+
+  /* Primary Button */
+  .btn-primary {
+    @apply bg-primary text-white;
+    @apply hover:bg-primary-dark hover:shadow-lg hover:-translate-y-0.5;
+    @apply focus:ring-primary/50;
+    @apply active:translate-y-0;
+  }
+
+  /* Secondary Button */
+  .btn-secondary {
+    @apply bg-gray-600 text-white;
+    @apply hover:bg-gray-700 hover:shadow-lg hover:-translate-y-0.5;
+    @apply focus:ring-gray-500/50;
+    @apply active:translate-y-0;
+  }
+
+  /* Outline Button */
+  .btn-outline {
+    @apply bg-white text-gray-700 border-2 border-gray-300;
+    @apply hover:bg-gray-50 hover:border-gray-400 hover:shadow-md hover:-translate-y-0.5;
+    @apply focus:ring-gray-300/50;
+    @apply active:translate-y-0;
+  }
+
+  /* Ghost Button */
+  .btn-ghost {
+    @apply bg-transparent text-gray-700;
+    @apply hover:bg-gray-100 hover:-translate-y-0.5;
+    @apply focus:ring-gray-300/50;
+    @apply active:translate-y-0;
+  }
+
+  /* Danger Button */
+  .btn-danger {
+    @apply bg-red-600 text-white;
+    @apply hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5;
+    @apply focus:ring-red-500/50;
+    @apply active:translate-y-0;
+  }
+
+  /* Success Button */
+  .btn-success {
+    @apply bg-green-600 text-white;
+    @apply hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5;
+    @apply focus:ring-green-500/50;
+    @apply active:translate-y-0;
+  }
+}
+
+/* Smooth Transitions */
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .transition-fast {
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .transition-slow {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0BB69B;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #099980;
+}
+
+/* Page Transitions */
+.page-transition {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading Animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin 3s linear infinite;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #0BB69B 0%, #099980 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass Effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Focus Visible */
+*:focus-visible {
+  outline: 2px solid #0BB69B;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Link Hover Animation */
+a {
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Input Focus Animation */
+input:focus,
+textarea:focus,
+select:focus {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Card Hover Animation */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }

@@ -35,11 +35,11 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-gray-800 mb-4">Customer Care</h3>
             <ul className="space-y-2 text-gray-600 text-xs">
-              <li><Link href="#" className="hover:underline">Help Center</Link></li>
-              <li><Link href="#" className="hover:underline">How to Buy</Link></li>
-              <li><Link href="#" className="hover:underline">Returns & Refunds</Link></li>
-              <li><Link href="#" className="hover:underline">Contact Us</Link></li>
-              <li><Link href="#" className="hover:underline">Terms & Conditions</Link></li>
+              <li><Link href="/help" className="hover:underline">Help Center</Link></li>
+              <li><Link href="/how-to-buy" className="hover:underline">How to Buy</Link></li>
+              <li><Link href="/returns" className="hover:underline">Returns & Refunds</Link></li>
+              <li><Link href="/contact" className="hover:underline">Contact Us</Link></li>
+              <li><Link href="/terms" className="hover:underline">Terms & Conditions</Link></li>
             </ul>
           </div>
 
@@ -47,11 +47,11 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-gray-800 mb-4">BizConnect</h3>
             <ul className="space-y-2 text-gray-600 text-xs">
-              <li><Link href="#" className="hover:underline">About Us</Link></li>
-              <li><Link href="#" className="hover:underline">Digital Payments</Link></li>
-              <li><Link href="#" className="hover:underline">BizConnect Blog</Link></li>
-              <li><Link href="#" className="hover:underline">BizConnect Cares</Link></li>
-              <li><Link href="#" className="hover:underline">Privacy Policy</Link></li>
+              <li><Link href="/about" className="hover:underline">About Us</Link></li>
+              <li><Link href="/payments" className="hover:underline">Digital Payments</Link></li>
+              <li><Link href="/blog" className="hover:underline">BizConnect Blog</Link></li>
+              <li><Link href="/community" className="hover:underline">BizConnect Cares</Link></li>
+              <li><Link href="/privacy" className="hover:underline">Privacy Policy</Link></li>
             </ul>
           </div>
 
@@ -59,9 +59,9 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-gray-800 mb-4">Make Money</h3>
             <ul className="space-y-2 text-gray-600 text-xs">
-              <li><Link href="#" className="hover:underline">Sell on BizConnect</Link></li>
-              <li><Link href="#" className="hover:underline">Code of Conduct</Link></li>
-              <li><Link href="#" className="hover:underline">Join Affiliate Program</Link></li>
+              <li><Link href="/sell" className="hover:underline">Sell on BizConnect</Link></li>
+              <li><Link href="/code-of-conduct" className="hover:underline">Code of Conduct</Link></li>
+              <li><Link href="/affiliate" className="hover:underline">Join Affiliate Program</Link></li>
             </ul>
           </div>
 

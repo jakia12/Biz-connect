@@ -13,18 +13,23 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const categories = [
-    { name: "Food & Beverage", icon: "🍔" },
-    { name: "Fashion & Apparel", icon: "👗" },
-    { name: "Handmade Crafts", icon: "🎨" },
-    { name: "Electronics", icon: "📱" },
-    { name: "Home & Living", icon: "🏠" },
-    { name: "Beauty & Care", icon: "💄" },
-    { name: "Agriculture", icon: "🌾" },
-    { name: "Digital Services", icon: "💻" },
-    { name: "Design & Creative", icon: "🖌️" },
-    { name: "Event Management", icon: "🎉" },
-    { name: "Business Consulting", icon: "📊" },
+    { name: "Food & Beverage", icon: "🍔", type: "product" },
+    { name: "Fashion & Apparel", icon: "👗", type: "product" },
+    { name: "Handmade Crafts", icon: "🎨", type: "product" },
+    { name: "Electronics", icon: "📱", type: "product" },
+    { name: "Home & Living", icon: "🏠", type: "product" },
+    { name: "Beauty & Care", icon: "💄", type: "product" },
+    { name: "Agriculture", icon: "🌾", type: "product" },
+    { name: "Graphics & Design", icon: "🎨", type: "service" },
+    { name: "Digital Marketing", icon: "📢", type: "service" },
+    { name: "Web Development", icon: "💻", type: "service" },
+    { name: "Content Writing", icon: "✍️", type: "service" },
+    { name: "Video & Animation", icon: "🎬", type: "service" },
+    { name: "Business Consulting", icon: "📊", type: "service" },
   ];
+
+  const serviceCategories = categories.filter(cat => cat.type === 'service');
+  const productCategories = categories.filter(cat => cat.type === 'product');
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 font-body">
@@ -145,18 +150,49 @@ export default function Navbar() {
                 </svg>
               </button>
               
-              {/* Dropdown Menu */}
-              <div className="absolute top-full left-0 w-64 bg-white shadow-xl border border-gray-100 rounded-b-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
-                <ul className="py-3">
-                  {categories.map((cat, idx) => (
-                    <li key={idx}>
-                      <Link href="#" className="flex items-center gap-3 px-6 py-3 text-sm text-gray-600 hover:text-primary hover:bg-gray-50 transition-colors">
-                        <span className="text-lg opacity-80">{cat.icon}</span>
-                        {cat.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+              {/* Dropdown Menu - Organized by Products & Services */}
+              <div className="absolute top-full left-0 w-[500px] bg-white shadow-xl border border-gray-100 rounded-b-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                <div className="grid grid-cols-2 divide-x divide-gray-100">
+                  {/* Products Column */}
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      Products
+                    </h3>
+                    <ul className="space-y-1">
+                      {productCategories.map((cat, idx) => (
+                        <li key={idx}>
+                          <Link href={`/products/${cat.name.toLowerCase().replace(/ /g, '-')}`} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-gray-50 rounded transition-colors">
+                            <span className="text-base opacity-80">{cat.icon}</span>
+                            {cat.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Services Column */}
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      Services
+                    </h3>
+                    <ul className="space-y-1">
+                      {serviceCategories.map((cat, idx) => (
+                        <li key={idx}>
+                          <Link href={`/services/${cat.name.toLowerCase().replace(/ /g, '-')}`} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-gray-50 rounded transition-colors">
+                            <span className="text-base opacity-80">{cat.icon}</span>
+                            {cat.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -3,11 +3,15 @@
  * Clean, Professional Marketplace Design
  */
 
+'use client';
+
 import HeroSlider from '@/components/home/HeroSlider';
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
 import ProductCard from '@/components/product/ProductCard';
 import Button from '@/components/ui/Button';
+import { fadeInUp, scaleIn, staggerContainer } from '@/utils/animations';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -229,40 +233,64 @@ export default function HomePage() {
       </div>
 
       {/* Professional Services */}
-      <div className="container mx-auto px-6 py-16">
-        <div className="flex items-center justify-between mb-10">
+      <motion.div 
+        className="container mx-auto px-6 py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={staggerContainer}
+      >
+        <motion.div 
+          className="flex items-center justify-between mb-10"
+          variants={fadeInUp}
+        >
           <div>
             <h2 className="text-3xl font-bold text-gray-900 font-heading">Professional Services</h2>
             <p className="text-gray-600 mt-2">Find expert freelancers for your business needs</p>
           </div>
           <Link href="/services" className="text-primary font-bold hover:underline">View All →</Link>
-        </div>
+        </motion.div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
+        <motion.div 
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12"
+          variants={staggerContainer}
+        >
           {serviceCategories.map((cat, idx) => (
-            <Link href={`/services/${cat.name.toLowerCase().replace(/ /g, '-')}`} key={idx} className="group">
-              <div className="relative h-32 rounded-xl overflow-hidden mb-3 shadow-md group-hover:shadow-xl transition-all">
-                <Image 
-                  src={cat.image} 
-                  alt={cat.name}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <h3 className="font-bold text-white text-sm">{cat.name}</h3>
+            <motion.div
+              key={idx}
+              variants={scaleIn}
+              whileHover={{ scale: 1.05, y: -5 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Link href={`/services/${cat.name.toLowerCase().replace(/ /g, '-')}`} className="group block">
+                <div className="relative h-32 rounded-xl overflow-hidden mb-3 shadow-md group-hover:shadow-xl transition-all">
+                  <Image 
+                    src={cat.image} 
+                    alt={cat.name}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <h3 className="font-bold text-white text-sm">{cat.name}</h3>
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div 
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          variants={staggerContainer}
+        >
           {featuredServices.map((service) => (
-            <ProductCard key={service.id} product={service} />
+            <motion.div key={service.id} variants={fadeInUp}>
+              <ProductCard product={service} />
+            </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Wholesale Products */}
       <div className="bg-white py-16">

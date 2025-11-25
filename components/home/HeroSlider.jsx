@@ -21,7 +21,7 @@ export default function HeroSlider() {
       image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=1920&h=800&fit=crop",
       cta: "Browse Designers",
       link: "/services/design",
-      color: "from-purple-600 to-pink-600"
+      color: "from-blue-600 to-cyan-600"
     },
     {
       title: "Wholesale Products",
@@ -39,7 +39,7 @@ export default function HeroSlider() {
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&h=800&fit=crop",
       cta: "Find Marketers",
       link: "/services/marketing",
-      color: "from-orange-600 to-red-600"
+      color: "from-blue-600 to-cyan-600"
     },
     {
       title: "Web Development Services",
@@ -48,7 +48,7 @@ export default function HeroSlider() {
       image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1920&h=800&fit=crop",
       cta: "Hire Developers",
       link: "/services/development",
-      color: "from-green-600 to-teal-600"
+      color: "from-blue-600 to-cyan-600"
     }
   ];
 
