@@ -201,7 +201,7 @@ export default function Navbar() {
               <Link href="/" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Home</Link>
               <Link href="/products" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Products</Link>
               <Link href="/services" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Services</Link>
-              <Link href="/vendors" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Verified Sellers</Link>
+              <Link href="/verified-sellers" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Verified Sellers</Link>
               <Link href="/community" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Community</Link>
             </nav>
 
