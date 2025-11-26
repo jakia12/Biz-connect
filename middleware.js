@@ -8,7 +8,7 @@ export function middleware(request) {
   
   // List of allowed origins (your frontend URLs)
   const allowedOrigins = [
-    'https://biz-connect.vercel.app', // Replace with your actual frontend URL
+    'https://biz-connect-2k5u.vercel.app', // Production deployment
     'http://localhost:3000', // Local development
     'http://localhost:3001', // Alternative local port
   ];
