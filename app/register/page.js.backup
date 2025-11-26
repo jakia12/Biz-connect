@@ -9,15 +9,14 @@
 import Button from '@/components/ui/Button';
 import FormField from '@/components/ui/FormField';
 import {
-  buyerRegistrationSchema,
-  sellerRegistrationSchema
+    buyerRegistrationSchema,
+    sellerRegistrationSchema
 } from '@/lib/validation-schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import toast, { Toaster } from 'react-hot-toast';
 
 export default function RegisterPage() {
   const [role, setRole] = useState('buyer'); // 'buyer' or 'seller'
@@ -142,47 +141,18 @@ export default function RegisterPage() {
     }
   };
 
-  const onBuyerSubmit = async (data) => {
-    try {
-      console.log('[Frontend] Submitting buyer registration');
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'buyer', ...data }),
-      });
-      const result = await response.json();
-      console.log('[Frontend] Response:', result);
-      if (!response.ok) throw new Error(result.error || 'Registration failed');
-      toast.success('Account created successfully! Redirecting to login...');
-      setTimeout(() => window.location.href = '/login', 1500);
-    } catch (error) {
-      console.error('[Frontend] Error:', error);
-      toast.error(error.message || 'Registration failed. Please try again.');
-    }
+  const onBuyerSubmit = (data) => {
+    console.log('Buyer Registration:', data);
+    // Handle registration logic here
   };
 
-  const onSellerSubmit = async (data) => {
-    try {
-      console.log('[Frontend] Submitting seller registration');
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'seller', ...data }),
-      });
-      const result = await response.json();
-      console.log('[Frontend] Response:', result);
-      if (!response.ok) throw new Error(result.error || 'Registration failed');
-      toast.success('Seller account created successfully! Redirecting to login...');
-      setTimeout(() => window.location.href = '/login', 1500);
-    } catch (error) {
-      console.error('[Frontend] Error:', error);
-      toast.error(error.message || 'Registration failed. Please try again.');
-    }
+  const onSellerSubmit = (data) => {
+    console.log('Seller Registration:', data);
+    // Handle registration logic here
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-body flex items-center justify-center py-12 px-4">
-      <Toaster position="top-center" toastOptions={{ duration: 4000, style: { background: '#fff', color: '#333', padding: '16px', borderRadius: '10px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' }, success: { iconTheme: { primary: '#10b981', secondary: '#fff' } }, error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } } }} />
       <div className="w-full max-w-2xl">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -650,7 +620,7 @@ export default function RegisterPage() {
                     variant="primary"
                     className="px-8 py-3 flex items-center gap-2"
                   >
-                    Next
+                    Next: {sellerSteps[currentStep].title}
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
