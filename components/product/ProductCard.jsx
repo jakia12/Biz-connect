@@ -5,11 +5,14 @@
 
 'use client';
 
+import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { motion } from 'framer-motion';
+import { ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function ProductCard({ product, className = '' }) {
   const {
@@ -26,7 +29,15 @@ export default function ProductCard({ product, className = '' }) {
   } = product;
 
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { addToCart, cart } = useCart();
   const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  
+  // Check if product is already in cart
+  const isInCart = cart?.items?.some(item => 
+    item.productId?._id === id || item.productId === id
+  );
+  
   const inWishlist = isInWishlist(id);
 
   const handleWishlistClick = async (e) => {
@@ -35,6 +46,30 @@ export default function ProductCard({ product, className = '' }) {
     setIsTogglingWishlist(true);
     await toggleWishlist(id);
     setIsTogglingWishlist(false);
+  };
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isInCart) {
+      toast.error('Item already in cart');
+      return;
+    }
+    
+    setIsAddingToCart(true);
+    
+    // Prepare product data for cart
+    const productData = {
+      title,
+      price,
+      image,
+    };
+    
+    // Add to cart using CartContext
+    const success = await addToCart(id, 1, productData);
+    
+    setIsAddingToCart(false);
   };
 
   // Calculate discount if not provided but original price exists
@@ -115,6 +150,28 @@ export default function ProductCard({ product, className = '' }) {
             </div>
             <span>{sold ? `${sold} Sold` : `${reviews || 0} Reviews`}</span>
           </div>
+
+          {/* Add to Cart Button */}
+          <motion.button
+            onClick={handleAddToCart}
+            disabled={isInCart || isAddingToCart}
+            className={`mt-3 w-full py-2.5 px-4 rounded-md flex items-center justify-center gap-2 font-medium text-sm transition-all shadow-sm ${
+              isInCart 
+                ? 'bg-green-500 text-white cursor-not-allowed' 
+                : isAddingToCart
+                ? 'bg-gray-400 text-white cursor-wait'
+                : 'bg-primary hover:bg-primary/90 text-white hover:shadow-md'
+            }`}
+            initial={{ opacity: 0, y: 10 }}
+            whileHover={!isInCart && !isAddingToCart ? { scale: 1.02 } : {}}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ShoppingCart className="w-4 h-4" />
+            <span>
+              {isInCart ? 'Added to Cart' : isAddingToCart ? 'Adding...' : 'Add to Cart'}
+            </span>
+          </motion.button>
         </div>
       </Link>
     </motion.div>
