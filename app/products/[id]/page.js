@@ -8,7 +8,7 @@
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
 import { useCart } from '@/context/CartContext';
-import { Heart, RotateCcw, Share2, ShieldCheck, ShoppingCart, TruckIcon } from 'lucide-react';
+import { Heart, RotateCcw, Share2, ShieldCheck, ShoppingCart, Star, TruckIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { use, useEffect, useState } from 'react';
@@ -19,6 +19,8 @@ export default function ProductDetailsPage({ params }) {
   const productId = unwrappedParams.id;
 
   const [product, setProduct] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -28,6 +30,7 @@ export default function ProductDetailsPage({ params }) {
 
   useEffect(() => {
     fetchProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   const fetchProduct = async () => {
@@ -38,6 +41,8 @@ export default function ProductDetailsPage({ params }) {
 
       if (data.success) {
         setProduct(data.product);
+        setReviews(data.reviews || []);
+        setReviewStats(data.reviewStats || null);
       } else {
         toast.error('Product not found');
       }
@@ -178,7 +183,7 @@ export default function ProductDetailsPage({ params }) {
                   {[...Array(5)].map((_, i) => (
                     <svg
                       key={i}
-                      className={`w-5 h-5 ${i < Math.floor(product.rating || 4.5) ? 'text-yellow-400' : 'text-gray-300'}`}
+                      className={`w-5 h-5 ${i < Math.floor(reviewStats?.averageRating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -186,8 +191,8 @@ export default function ProductDetailsPage({ params }) {
                     </svg>
                   ))}
                 </div>
-                <span className="font-semibold text-gray-900">{(product.rating || 4.5).toFixed(1)}</span>
-                <span className="text-gray-500">({product.reviewCount || 0} reviews)</span>
+                <span className="font-semibold text-gray-900">{reviewStats?.averageRating?.toFixed(1) || '0.0'}</span>
+                <span className="text-gray-500">({reviewStats?.totalReviews || 0} reviews)</span>
               </div>
               <div className="h-6 w-px bg-gray-300"></div>
               <div className="text-gray-600">
@@ -332,6 +337,107 @@ export default function ProductDetailsPage({ params }) {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        {reviewStats && reviewStats.totalReviews > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-16">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h3>
+            
+            {/* Rating Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 pb-8 border-b border-gray-200">
+              {/* Overall Rating */}
+              <div className="text-center">
+                <div className="text-5xl font-bold text-gray-900 mb-2">{reviewStats.averageRating.toFixed(1)}</div>
+                <div className="flex items-center justify-center mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-6 h-6 ${i < Math.floor(reviewStats.averageRating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                    />
+                  ))}
+                </div>
+                <p className="text-gray-600">{reviewStats.totalReviews} reviews</p>
+              </div>
+
+              {/* Rating Distribution */}
+              <div className="md:col-span-2 space-y-2">
+                {[5, 4, 3, 2, 1].map((star) => {
+                  const count = reviewStats.distribution[star] || 0;
+                  const percentage = reviewStats.totalReviews > 0 ? (count / reviewStats.totalReviews) * 100 : 0;
+                  
+                  return (
+                    <div key={star} className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-700 w-12">{star} star</span>
+                      <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className="bg-yellow-400 h-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm text-gray-600 w-12 text-right">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Individual Reviews */}
+            <div className="space-y-6">
+              {reviews.map((review) => (
+                <div key={review._id} className="border-b border-gray-200 last:border-0 pb-6 last:pb-0">
+                  <div className="flex items-start gap-4">
+                    {/* Avatar */}
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                      {review.buyerId?.name?.charAt(0) || 'U'}
+                    </div>
+                    
+                    {/* Review Content */}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h4 className="font-bold text-gray-900">{review.buyerId?.name || 'Anonymous'}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                                />
+                              ))}
+                            </div>
+                            {review.isVerifiedPurchase && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                                <ShieldCheck className="w-3 h-3" />
+                                Verified Purchase
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(review.createdAt).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No Reviews State */}
+        {reviewStats && reviewStats.totalReviews === 0 && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 mb-16 text-center">
+            <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No Reviews Yet</h3>
+            <p className="text-gray-600">Be the first to review this product!</p>
+          </div>
+        )}
 
         {/* Seller Info Card */}
         {product.sellerId && (

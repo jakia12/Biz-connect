@@ -217,15 +217,15 @@ export default function SellerOrderDetailsPage({ params }) {
             <div className="space-y-2 text-sm">
               <div>
                 <p className="text-blue-600">Name</p>
-                <p className="text-blue-900 font-medium">{order.buyerId?.name}</p>
+                <p className="text-blue-900 font-medium">{order.buyerId?.name || order.shippingAddress?.fullName || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-blue-600">Email</p>
-                <p className="text-blue-900">{order.buyerId?.email}</p>
+                <p className="text-blue-900">{order.buyerId?.email || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-blue-600">Phone</p>
-                <p className="text-blue-900">{order.buyerId?.phone}</p>
+                <p className="text-blue-900">{order.buyerId?.phone || order.shippingAddress?.phone || 'N/A'}</p>
               </div>
             </div>
           </div>

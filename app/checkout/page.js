@@ -18,7 +18,7 @@ export default function CheckoutPage() {
     address: '',
     city: '',
     postalCode: '',
-    paymentMethod: 'cash_on_delivery', // Cash on Delivery default
+    paymentMethod: 'cod', // Cash on Delivery default
   });
 
   useEffect(() => {
@@ -38,6 +38,29 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      // Filter out items with null productId before submitting
+      const validItems = cart.items.filter(item => item.productId && item.productId._id);
+      
+      if (validItems.length === 0) {
+        toast.error('Your cart has no valid items');
+        setLoading(false);
+        return;
+      }
+
+      if (validItems.length < cart.items.length) {
+        toast.error('Some items are no longer available and will be skipped');
+      }
+
+      // Validate form data manually to ensure no empty fields
+      const requiredFields = ['fullName', 'phone', 'address', 'city', 'postalCode'];
+      const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+      
+      if (missingFields.length > 0) {
+        toast.error('Please fill in all required shipping fields');
+        setLoading(false);
+        return;
+      }
+
       // Create order API call
       const response = await fetch('/api/orders', {
         method: 'POST',
@@ -51,7 +74,7 @@ export default function CheckoutPage() {
             postalCode: formData.postalCode,
           },
           paymentMethod: formData.paymentMethod,
-          items: cart.items.map(item => ({
+          items: validItems.map(item => ({
             productId: item.productId._id,
             quantity: item.quantity,
             price: item.price
@@ -60,20 +83,41 @@ export default function CheckoutPage() {
         }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        const text = await response.text();
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error('Failed to parse response:', text);
+          throw new Error('Server returned invalid response');
+        }
+      } catch (e) {
+        console.error('Response processing error:', e);
+        throw new Error('Failed to process server response');
+      }
 
-      if (data.success) {
+      if (response.ok && data.success) {
         toast.success('Order placed successfully!');
-        await clearCart();
+        console.log('[Checkout] Clearing cart...');
+        const cartCleared = await clearCart();
+        console.log('[Checkout] Cart cleared:', cartCleared);
+        if (!cartCleared) {
+          console.warn('[Checkout] Cart clearing failed, but order was successful');
+        }
         router.push(`/orders/${data.order._id}`);
       } else {
         console.error('Order error:', data);
-        const errorMsg = data.details ? `${data.error}: ${data.details.join(', ')}` : data.error;
+        let details = data.details;
+        if (Array.isArray(details)) {
+          details = details.join(', ');
+        }
+        const errorMsg = details ? `${data.error}: ${details}` : data.error;
         toast.error(errorMsg || 'Failed to place order');
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error('Something went wrong. Please try again.');
+      toast.error(error.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -101,7 +145,7 @@ export default function CheckoutPage() {
               <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
                 <h2 className="text-xl font-bold mb-6 text-gray-900">Shipping Information</h2>
                 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form id="checkout-form" onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -205,16 +249,21 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-bold mb-6 text-gray-900">Order Summary</h2>
                 
                 <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                  {cart.items.map((item) => (
-                    <div key={item.productId._id} className="flex gap-4 text-sm">
-                      <div className="font-medium text-gray-900 flex-1">
-                        {item.quantity} x {item.productId.title}
+                  {cart.items.map((item) => {
+                    // Skip items with null productId
+                    if (!item.productId) return null;
+                    
+                    return (
+                      <div key={item.productId._id} className="flex gap-4 text-sm">
+                        <div className="font-medium text-gray-900 flex-1">
+                          {item.quantity} x {item.productId?.title || 'Unknown Product'}
+                        </div>
+                        <div className="text-gray-600">
+                          ৳{(item.price * item.quantity).toLocaleString()}
+                        </div>
                       </div>
-                      <div className="text-gray-600">
-                        ৳{(item.price * item.quantity).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="border-t border-gray-100 pt-4 space-y-3">
@@ -239,7 +288,8 @@ export default function CheckoutPage() {
                 <Button
                   variant="primary"
                   className="w-full mt-8 py-4 text-lg"
-                  onClick={handleSubmit}
+                  type="submit"
+                  form="checkout-form"
                   disabled={loading}
                 >
                   {loading ? 'Placing Order...' : 'Place Order'}

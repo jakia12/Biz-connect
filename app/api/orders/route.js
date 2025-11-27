@@ -3,11 +3,69 @@
  * Create new orders (buyer placing orders)
  */
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/backend/shared/config/auth';
 import connectDB from '@/backend/shared/config/database';
 import Order from '@/backend/shared/models/Order';
 import Product from '@/backend/shared/models/Product';
 import { getServerSession } from 'next-auth';
+
+/**
+ * GET /api/orders
+ * Fetch orders for the current user (buyer or seller)
+ */
+export async function GET(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return Response.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit')) || 20;
+    const page = parseInt(searchParams.get('page')) || 1;
+    const skip = (page - 1) * limit;
+
+    let query = {};
+    if (session.user.role === 'seller') {
+      query = { sellerId: session.user.id };
+    } else {
+      query = { buyerId: session.user.id };
+    }
+
+    const orders = await Order.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip)
+      .populate('items.productId', 'title image')
+      .populate('buyerId', 'name email')
+      .populate('sellerId', 'name email')
+      .lean();
+
+    const total = await Order.countDocuments(query);
+
+    return Response.json({
+      success: true,
+      orders,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limit),
+        page,
+        limit
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return Response.json(
+      { error: 'Failed to fetch orders' },
+      { status: 500 }
+    );
+  }
+}
 
 /**
  * POST /api/orders
@@ -71,6 +129,13 @@ export async function POST(request) {
         );
       }
 
+      if (!product.sellerId) {
+        return Response.json(
+          { error: `Product "${product.title}" has no seller assigned` },
+          { status: 400 }
+        );
+      }
+
       const itemTotal = product.price * item.quantity;
       subtotal += itemTotal;
 
@@ -79,7 +144,7 @@ export async function POST(request) {
         title: product.title,
         price: product.price,
         quantity: item.quantity,
-        sellerId: product.sellerId,
+        sellerId: product.sellerId, // Kept for reference, though not in OrderItemSchema
       });
 
       // Update product stock
@@ -93,8 +158,30 @@ export async function POST(request) {
     const tax = subtotal * 0.05; // 5% tax
     const totalAmount = subtotal + shippingCost + tax;
 
+    if (isNaN(totalAmount)) {
+      return Response.json(
+        { error: 'Invalid total amount calculation' },
+        { status: 400 }
+      );
+    }
+
     // Get seller ID (assuming single seller per order for now)
+    // TODO: Handle multi-vendor orders (split orders)
     const sellerId = processedItems[0].sellerId;
+
+    if (!sellerId) {
+       return Response.json(
+        { error: 'Could not determine seller for this order' },
+        { status: 400 }
+      );
+    }
+
+    console.log('[Order API] Creating order with:', {
+      buyerId: session.user.id,
+      sellerId,
+      itemCount: processedItems.length,
+      totalAmount
+    });
 
     // Create order
     const order = await Order.create({
@@ -106,10 +193,14 @@ export async function POST(request) {
       tax,
       totalAmount,
       shippingAddress,
-      paymentMethod: paymentMethod || 'cash_on_delivery',
+      paymentMethod: paymentMethod || 'cod',
       paymentStatus: 'pending',
       status: 'pending',
     });
+
+    // Notify seller of new order
+    const { createOrderNotification } = await import('@/lib/notifications');
+    await createOrderNotification(sellerId, order._id, order.orderId);
 
     return Response.json(
       {

@@ -10,6 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import NotificationBell from './NotificationBell';
 
 export default function DashboardLayout({ children, role = 'buyer' }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -159,7 +160,8 @@ export default function DashboardLayout({ children, role = 'buyer' }) {
             <Link href="/" className="text-sm text-gray-600 hover:text-primary">
               Back to Marketplace
             </Link>
-            
+            {/* Notifications */}
+<NotificationBell role={role} />
             {/* User Profile Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button 

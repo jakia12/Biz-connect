@@ -60,8 +60,10 @@ export function WishlistProvider({ children }) {
       const data = await response.json();
 
       if (data.success) {
-        if (!data.alreadyExists) {
-          toast.success('Added to wishlist');
+        if (data.alreadyExists) {
+          toast.error('Item already in wishlist');
+        } else {
+          toast.success('Item saved to wishlist');
           await fetchWishlist(); // Refresh wishlist
         }
         return true;

@@ -1,4 +1,4 @@
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/backend/shared/config/auth';
 import connectDB from '@/backend/shared/config/database';
 import Product from '@/backend/shared/models/Product';
 import Wishlist from '@/backend/shared/models/Wishlist';

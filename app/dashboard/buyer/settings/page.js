@@ -10,27 +10,24 @@ import FormField from '@/components/ui/FormField';
 import { buyerSettingsSchema, passwordChangeSchema } from '@/lib/validation-schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 
 export default function BuyerSettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
 
   // Profile Form
   const {
     register: registerProfile,
     handleSubmit: handleProfileSubmit,
+    reset: resetProfile,
     formState: { errors: profileErrors, isSubmitting: isProfileSubmitting }
   } = useForm({
     resolver: zodResolver(buyerSettingsSchema),
     mode: 'onBlur',
-    defaultValues: {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      phone: '+880 1712 345678',
-      address: 'House 12, Road 5, Dhanmondi, Dhaka',
-    }
   });
 
   // Password Form
@@ -44,16 +41,104 @@ export default function BuyerSettingsPage() {
     mode: 'onBlur'
   });
 
-  const onProfileSubmit = (data) => {
-    console.log('Profile updated:', data);
-    // Handle profile update
+  // Fetch user data on mount
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/user/profile');
+      const data = await response.json();
+
+      if (data.success) {
+        setUserData(data.user);
+        // Split name into first and last name
+        const nameParts = (data.user.name || '').split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        // Reset form with fetched data
+        resetProfile({
+          firstName,
+          lastName,
+          email: data.user.email || '',
+          phone: data.user.phone || '',
+          address: data.user.businessAddress || '',
+        });
+      } else {
+        toast.error(data.error || 'Failed to fetch profile data');
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast.error('Failed to fetch profile data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const onPasswordSubmit = (data) => {
-    console.log('Password updated:', data);
-    // Handle password update
-    resetPassword();
+  const onProfileSubmit = async (data) => {
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${data.firstName} ${data.lastName}`.trim(),
+          phone: data.phone,
+          address: data.address,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Profile updated successfully');
+        setUserData(result.user);
+      } else {
+        toast.error(result.error || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+    }
   };
+
+  const onPasswordSubmit = async (data) => {
+    try {
+      const response = await fetch('/api/user/password', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Password updated successfully');
+        resetPassword();
+      } else {
+        toast.error(result.error || 'Failed to update password');
+      }
+    } catch (error) {
+      console.error('Error updating password:', error);
+      toast.error('Failed to update password');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-gray-600 ml-4">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">

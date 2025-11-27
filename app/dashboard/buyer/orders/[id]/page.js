@@ -17,6 +17,9 @@ export default function BuyerOrderDetailsPage({ params }) {
   
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -38,6 +41,39 @@ export default function BuyerOrderDetailsPage({ params }) {
       toast.error('Failed to fetch order');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!cancelReason.trim()) {
+      toast.error('Please provide a reason for cancellation');
+      return;
+    }
+
+    setCancelling(true);
+    try {
+      const response = await fetch(`/api/buyer/orders/${orderId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reason: cancelReason }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success('Order cancelled successfully');
+        setOrder(data.order);
+        setShowCancelModal(false);
+      } else {
+        toast.error(data.error || 'Failed to cancel order');
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast.error('Failed to cancel order');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -93,9 +129,20 @@ export default function BuyerOrderDetailsPage({ params }) {
               Placed on {new Date(order.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(order.status)}`}>
-            {order.status?.toUpperCase()}
-          </span>
+          <div className="flex items-center gap-4">
+            {order.status === 'pending' && (
+              <Button 
+                variant="outline" 
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                onClick={() => setShowCancelModal(true)}
+              >
+                Cancel Order
+              </Button>
+            )}
+            <span className={`px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(order.status)}`}>
+              {order.status?.toUpperCase()}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -109,7 +156,7 @@ export default function BuyerOrderDetailsPage({ params }) {
               {order.items?.map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between pb-4 border-b border-gray-200 last:border-0">
                   <div>
-                    <h4 className="font-medium text-gray-900">{item.title}</h4>
+                    <h4 className="font-medium text-gray-900">{item.productId?.title || item.title || 'Product'}</h4>
                     <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
                   </div>
                   <div className="text-right">
@@ -199,6 +246,57 @@ export default function BuyerOrderDetailsPage({ params }) {
           </div>
         </div>
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Cancel Order</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Reason for cancellation
+              </label>
+              <select
+                className="w-full rounded-lg border-gray-300 focus:ring-primary focus:border-primary"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+              >
+                <option value="">Select a reason</option>
+                <option value="Changed my mind">Changed my mind</option>
+                <option value="Found a better price">Found a better price</option>
+                <option value="Ordered by mistake">Ordered by mistake</option>
+                <option value="Shipping time is too long">Shipping time is too long</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason('');
+                }}
+                disabled={cancelling}
+              >
+                Keep Order
+              </Button>
+              <Button 
+                variant="primary" 
+                className="bg-red-600 hover:bg-red-700 border-red-600"
+                onClick={handleCancelOrder}
+                disabled={cancelling || !cancelReason}
+              >
+                {cancelling ? 'Cancelling...' : 'Confirm Cancellation'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

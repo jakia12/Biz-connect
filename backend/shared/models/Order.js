@@ -156,13 +156,13 @@ const OrderSchema = new mongoose.Schema(
 );
 
 // Generate unique order ID before saving
-OrderSchema.pre('save', async function (next) {
+// Generate unique order ID before saving
+OrderSchema.pre('save', function () {
   if (!this.orderId) {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
     this.orderId = `BC-${timestamp}-${random}`;
   }
-  next();
 });
 
 // Index for faster queries

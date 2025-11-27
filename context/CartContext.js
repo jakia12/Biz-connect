@@ -148,8 +148,10 @@ export function CartProvider({ children }) {
       if (data.success) {
         setCart(data.cart);
         return true;
+      } else {
+        console.error('Failed to clear cart:', data.error);
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('Error clearing cart:', error);
       return false;

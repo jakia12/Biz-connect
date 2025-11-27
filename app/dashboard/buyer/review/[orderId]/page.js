@@ -8,11 +8,15 @@
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 export default function LeaveReviewPage({ params }) {
+  // Unwrap the params Promise
+  const unwrappedParams = use(params);
+  const orderId = unwrappedParams.orderId;
+  
   const router = useRouter();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,17 +31,20 @@ export default function LeaveReviewPage({ params }) {
 
   useEffect(() => {
     fetchOrder();
-  }, [params.orderId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]);
 
   const fetchOrder = async () => {
     try {
-      const response = await fetch(`/api/buyer/orders/${params.orderId}`);
+      const response = await fetch(`/api/buyer/orders/${orderId}`);
       const data = await response.json();
 
       if (data.success) {
         setOrder(data.order);
         if (data.order.items?.length > 0) {
-          setSelectedProduct(data.order.items[0].productId);
+          // Set first product as default selection
+          const firstProduct = data.order.items[0];
+          setSelectedProduct(firstProduct.productId?._id || firstProduct.productId);
         }
       } else {
         toast.error(data.error || 'Failed to fetch order');
@@ -64,7 +71,7 @@ export default function LeaveReviewPage({ params }) {
 
     try {
       const reviewData = {
-        orderId: params.orderId,
+        orderId,
         productId: selectedProduct,
         rating,
         comment: data.comment,
@@ -103,6 +110,19 @@ export default function LeaveReviewPage({ params }) {
     );
   }
 
+  if (!order) {
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <p className="text-gray-600">Order not found</p>
+          <Link href="/dashboard/buyer/orders">
+            <Button variant="primary" className="mt-4">Back to Orders</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -136,27 +156,40 @@ export default function LeaveReviewPage({ params }) {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <h3 className="font-bold text-gray-900 mb-4">Select Product to Review</h3>
               <div className="space-y-2">
-                {order.items.map((item) => (
-                  <label
-                    key={item.productId}
-                    className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-colors ${
-                      selectedProduct === item.productId
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="product"
-                      value={item.productId}
-                      checked={selectedProduct === item.productId}
-                      onChange={() => setSelectedProduct(item.productId)}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="text-gray-900">{item.title}</span>
-                  </label>
-                ))}
+                {order.items.map((item) => {
+                  const productId = item.productId?._id || item.productId;
+                  const productTitle = item.productId?.title || item.title || 'Product';
+                  
+                  return (
+                    <label
+                      key={productId}
+                      className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                        selectedProduct === productId
+                          ? 'border-primary bg-primary/5'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="product"
+                        value={productId}
+                        checked={selectedProduct === productId}
+                        onChange={() => setSelectedProduct(productId)}
+                        className="text-primary focus:ring-primary"
+                      />
+                      <span className="text-gray-900">{productTitle}</span>
+                    </label>
+                  );
+                })}
               </div>
+            </div>
+          )}
+
+          {/* Single Product Display */}
+          {order?.items?.length === 1 && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="font-bold text-gray-900 mb-4">Product</h3>
+              <p className="text-gray-900">{order.items[0].productId?.title || order.items[0].title || 'Product'}</p>
             </div>
           )}
 

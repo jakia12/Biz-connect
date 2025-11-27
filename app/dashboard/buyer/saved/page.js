@@ -7,72 +7,31 @@
 
 import ProductCard from '@/components/product/ProductCard';
 import Button from '@/components/ui/Button';
+import { useWishlist } from '@/context/WishlistContext';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function SavedItemsPage() {
-  const [savedItems, setSavedItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchSavedItems();
-  }, []);
-
-  const fetchSavedItems = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/buyer/saved');
-      const data = await response.json();
-
-      if (data.success) {
-        setSavedItems(data.savedItems);
-      } else {
-        toast.error(data.error || 'Failed to fetch saved items');
-      }
-    } catch (error) {
-      console.error('Error fetching saved items:', error);
-      toast.error('Failed to fetch saved items');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { wishlist, loading, removeFromWishlist } = useWishlist();
 
   const handleRemove = async (productId) => {
-    try {
-      const response = await fetch(`/api/buyer/saved/${productId}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success('Removed from saved items');
-        // Remove from local state
-        setSavedItems(prev => prev.filter(item => item.productId._id !== productId));
-      } else {
-        toast.error(data.error || 'Failed to remove item');
-      }
-    } catch (error) {
-      console.error('Error removing item:', error);
-      toast.error('Failed to remove item');
-    }
+    const success = await removeFromWishlist(productId);
+    // Toast is already shown in the context
   };
 
   const handleClearAll = async () => {
-    if (!confirm(`Remove all ${savedItems.length} items from your wishlist?`)) {
+    if (!confirm(`Remove all ${wishlist.length} items from your wishlist?`)) {
       return;
     }
 
     // Remove all items one by one
     try {
       await Promise.all(
-        savedItems.map(item => 
-          fetch(`/api/buyer/saved/${item.productId._id}`, { method: 'DELETE' })
+        wishlist.map(item => 
+          removeFromWishlist(item.productId?._id || item.productId)
         )
       );
       toast.success('All items removed');
-      setSavedItems([]);
     } catch (error) {
       console.error('Error clearing saved items:', error);
       toast.error('Failed to clear all items');
@@ -86,10 +45,10 @@ export default function SavedItemsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 font-heading">Saved Items</h1>
           <p className="text-gray-600 mt-1">
-            {loading ? 'Loading...' : `${savedItems.length} items in your wishlist`}
+            {loading ? 'Loading...' : `${wishlist.length} items in your wishlist`}
           </p>
         </div>
-        {savedItems.length > 0 && (
+        {wishlist.length > 0 && (
           <Button variant="outline" onClick={handleClearAll}>Clear All</Button>
         )}
       </div>
@@ -101,7 +60,7 @@ export default function SavedItemsPage() {
           <p className="text-gray-600 mt-4">Loading saved items...</p>
         </div>
       ) : /* Empty State */
-      savedItems.length === 0 ? (
+      wishlist.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,25 +76,31 @@ export default function SavedItemsPage() {
       ) : (
         /* Saved Items Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {savedItems.map((item) => (
-            <div key={item._id} className="relative">
-              <ProductCard 
-                product={{
-                  ...item.productId,
-                  seller: item.productId.sellerId,
-                  image: item.productId.images?.[0] || 'https://via.placeholder.com/400',
-                }} 
-              />
-              <button
-                onClick={() => handleRemove(item.productId._id)}
-                className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-red-50 transition-colors group"
-              >
-                <svg className="w-5 h-5 text-gray-600 group-hover:text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          ))}
+          {wishlist.map((item) => {
+            const product = item.productId;
+            const productId = product?._id || product;
+            
+            return (
+              <div key={item._id} className="relative">
+                <ProductCard 
+                  product={{
+                    id: productId,
+                    ...product,
+                    seller: product?.sellerId,
+                    image: product?.images?.[0] || 'https://via.placeholder.com/400',
+                  }} 
+                />
+                <button
+                  onClick={() => handleRemove(productId)}
+                  className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-red-50 transition-colors group z-30"
+                >
+                  <svg className="w-5 h-5 text-gray-600 group-hover:text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

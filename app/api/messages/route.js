@@ -3,7 +3,7 @@
  * Buyer-seller communication system
  */
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/backend/shared/config/auth';
 import connectDB from '@/backend/shared/config/database';
 import Message from '@/backend/shared/models/Message';
 import { getServerSession } from 'next-auth';

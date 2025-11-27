@@ -3,7 +3,7 @@
  * Manage shopping cart items
  */
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/backend/shared/config/auth';
 import connectDB from '@/backend/shared/config/database';
 import Cart from '@/backend/shared/models/Cart';
 import Product from '@/backend/shared/models/Product';

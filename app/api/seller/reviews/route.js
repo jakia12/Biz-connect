@@ -3,7 +3,7 @@
  * Fetch reviews for seller's products
  */
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/backend/shared/config/auth';
 import connectDB from '@/backend/shared/config/database';
 import Review from '@/backend/shared/models/Review';
 import { getServerSession } from 'next-auth';

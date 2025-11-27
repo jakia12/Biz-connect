@@ -3,7 +3,8 @@
  * Fetch analytics and statistics for seller dashboard
  */
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+
+import { authOptions } from '@/backend/shared/config/auth';
 import connectDB from '@/backend/shared/config/database';
 import Order from '@/backend/shared/models/Order';
 import Product from '@/backend/shared/models/Product';
@@ -34,9 +35,13 @@ export async function GET(request) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
+    // Convert sellerId to ObjectId for MongoDB queries
+    const mongoose = require('mongoose');
+    const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
+
     // Product Statistics
     const productStats = await Product.aggregate([
-      { $match: { sellerId: sellerId } },
+      { $match: { sellerId: sellerObjectId } },
       {
         $group: {
           _id: null,
@@ -52,7 +57,7 @@ export async function GET(request) {
 
     // Order Statistics
     const orderStats = await Order.aggregate([
-      { $match: { sellerId: sellerId, createdAt: { $gte: startDate } } },
+      { $match: { sellerId: sellerObjectId, createdAt: { $gte: startDate } } },
       {
         $group: {
           _id: null,
@@ -79,7 +84,7 @@ export async function GET(request) {
 
     // Revenue by Date (for charts)
     const revenueByDate = await Order.aggregate([
-      { $match: { sellerId: sellerId, createdAt: { $gte: startDate } } },
+      { $match: { sellerId: sellerObjectId, createdAt: { $gte: startDate } } },
       {
         $group: {
           _id: {
@@ -93,7 +98,7 @@ export async function GET(request) {
     ]);
 
     // Top Selling Products
-    const topProducts = await Product.find({ sellerId: sellerId })
+    const topProducts = await Product.find({ sellerId: sellerObjectId })
       .sort({ salesCount: -1 })
       .limit(5)
       .select('title salesCount price images')
@@ -101,7 +106,7 @@ export async function GET(request) {
 
     // Review Statistics
     const reviewStats = await Review.aggregate([
-      { $match: { sellerId: sellerId } },
+      { $match: { sellerId: sellerObjectId } },
       {
         $group: {
           _id: null,
@@ -112,7 +117,7 @@ export async function GET(request) {
     ]);
 
     // Recent Orders
-    const recentOrders = await Order.find({ sellerId: sellerId })
+    const recentOrders = await Order.find({ sellerId: sellerObjectId })
       .populate('buyerId', 'name')
       .sort({ createdAt: -1 })
       .limit(5)

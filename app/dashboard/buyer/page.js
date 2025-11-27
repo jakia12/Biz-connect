@@ -3,6 +3,8 @@
 import ProductCard from '@/components/product/ProductCard';
 import Button from '@/components/ui/Button';
 import { useWishlist } from '@/context/WishlistContext';
+import { motion } from 'framer-motion';
+import { CheckCircle, Clock, Heart, LogOut, MessageSquare, Package, Settings, ShoppingBag, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -25,7 +27,7 @@ export default function BuyerDashboard() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/orders?limit=5');
+      const response = await fetch('/api/buyer/orders?limit=5');
       const data = await response.json();
 
       if (data.success) {
@@ -54,30 +56,50 @@ export default function BuyerDashboard() {
 
   const getStatusBadge = (status) => {
     const styles = {
-      'pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-      'processing': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Processing' },
-      'shipped': { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Shipped' },
-      'delivered': { bg: 'bg-green-100', text: 'text-green-800', label: 'Delivered' },
-      'cancelled': { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelled' }
+      'pending': { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', icon: Clock },
+      'processing': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200', icon: Package },
+      'shipped': { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200', icon: TrendingUp },
+      'delivered': { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-200', icon: CheckCircle },
+      'cancelled': { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200', icon: LogOut }
     };
     return styles[status] || styles.pending;
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 100
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 font-body">
+    <div className="min-h-screen bg-gray-50/50 font-body">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-6 py-6">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-30 backdrop-blur-xl bg-white/80">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 font-heading">My Dashboard</h1>
-              <p className="text-gray-600 mt-1">Track your orders and manage your saved items</p>
+              <h1 className="text-2xl font-bold text-gray-900 font-heading">My Dashboard</h1>
+              <p className="text-gray-500 text-sm">Welcome back, Buyer</p>
             </div>
             <Link href="/">
-              <Button variant="primary" className="px-6 py-3">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+              <Button variant="primary" className="px-5 py-2.5 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all">
+                <ShoppingBag className="w-4 h-4 mr-2" />
                 Browse Products
               </Button>
             </Link>
@@ -85,77 +107,74 @@ export default function BuyerDashboard() {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
+      <motion.div 
+        className="container mx-auto px-6 py-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
+              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                <ShoppingBag className="w-6 h-6 text-blue-600" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.total}</h3>
-                <p className="text-gray-600 text-sm">Total Orders</p>
+                <p className="text-gray-500 text-sm font-medium">Total Orders</p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
+                <Clock className="w-6 h-6 text-amber-600" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.inProgress}</h3>
-                <p className="text-gray-600 text-sm">In Progress</p>
+                <p className="text-gray-500 text-sm font-medium">In Progress</p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
+              <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center">
+                <Heart className="w-6 h-6 text-rose-600" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">{wishlist?.length || 0}</h3>
-                <p className="text-gray-600 text-sm">Saved Items</p>
+                <p className="text-gray-500 text-sm font-medium">Saved Items</p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <motion.div variants={itemVariants} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-emerald-600" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.completed}</h3>
-                <p className="text-gray-600 text-sm">Completed</p>
+                <p className="text-gray-500 text-sm font-medium">Completed</p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Orders */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Recent Orders</h2>
-                <Link href="/dashboard/buyer/orders" className="text-sm font-medium text-primary hover:underline">
-                  View All
+          <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <h2 className="text-lg font-bold text-gray-900">Recent Orders</h2>
+                <Link href="/dashboard/buyer/orders" className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+                  View All Orders
                 </Link>
               </div>
-              <div className="divide-y divide-gray-200">
+              <div className="divide-y divide-gray-100">
                 {loading ? (
                   <div className="p-12 text-center text-gray-500">
                     <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -163,46 +182,51 @@ export default function BuyerDashboard() {
                   </div>
                 ) : orders.length === 0 ? (
                   <div className="p-12 text-center text-gray-500">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
+                    <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                     <p className="text-lg font-medium mb-2">No orders yet</p>
                     <p className="text-sm">Start shopping to see your orders here</p>
                   </div>
                 ) : (
                   orders.map((order) => {
                     const statusInfo = getStatusBadge(order.status);
+                    const StatusIcon = statusInfo.icon;
                     const firstItem = order.items?.[0];
+                    
                     return (
-                      <div key={order._id} className="p-6 hover:bg-gray-50 transition-colors">
-                        <div className="flex gap-4">
-                          <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0"></div>
+                      <div key={order._id} className="p-6 hover:bg-gray-50 transition-colors group">
+                        <div className="flex gap-5">
+                          <div className="w-20 h-20 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden border border-gray-200">
+                            {/* Placeholder for product image if available */}
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                              <Package className="w-8 h-8" />
+                            </div>
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-4 mb-2">
                               <div>
-                                <h3 className="font-bold text-gray-900 mb-1">
+                                <h3 className="font-bold text-gray-900 mb-1 group-hover:text-primary transition-colors">
                                   {firstItem?.title || 'Order'}
-                                  {order.items?.length > 1 && ` +${order.items.length - 1} more`}
+                                  {order.items?.length > 1 && <span className="text-gray-500 font-normal text-sm ml-2">+{order.items.length - 1} more</span>}
                                 </h3>
-                                <p className="text-sm text-gray-600">by {order.sellerId?.businessName || order.sellerId?.name}</p>
+                                <p className="text-sm text-gray-500">Sold by <span className="font-medium text-gray-700">{order.sellerId?.businessName || order.sellerId?.name}</span></p>
                               </div>
-                              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusInfo.bg} ${statusInfo.text} whitespace-nowrap`}>
-                                {statusInfo.label}
+                              <span className={`px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1.5 ${statusInfo.bg} ${statusInfo.text} border ${statusInfo.border}`}>
+                                <StatusIcon className="w-3.5 h-3.5" />
+                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between mt-3">
-                              <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <span>Order ID: {order.orderId}</span>
+                            <div className="flex items-center justify-between mt-4">
+                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-xs">#{order.orderId}</span>
                                 <span>•</span>
-                                <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                                <span>{new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                               </div>
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-4">
                                 <span className="font-bold text-gray-900">৳{order.totalAmount?.toLocaleString()}</span>
-                                {order.status === 'delivered' && (
-                                  <button className="text-sm font-medium text-primary hover:underline">Leave Review</button>
-                                )}
-                                <Link href={`/dashboard/buyer/orders/${order._id}`} className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                                  View Details
+                                <Link href={`/dashboard/buyer/orders/${order._id}`}>
+                                  <Button variant="outline" size="sm" className="hover:bg-white">
+                                    Details
+                                  </Button>
                                 </Link>
                               </div>
                             </div>
@@ -214,62 +238,68 @@ export default function BuyerDashboard() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <motion.div variants={itemVariants} className="space-y-6">
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
               <div className="space-y-3">
-                <Link href="/dashboard/buyer/messages" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                    </svg>
+                <Link href="/dashboard/buyer/messages" className="flex items-center gap-4 p-3 rounded-xl hover:bg-blue-50 transition-colors group border border-transparent hover:border-blue-100">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors text-blue-600">
+                    <MessageSquare className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    <span className="font-medium text-gray-700 group-hover:text-gray-900 block">Messages</span>
-                    <span className="text-xs text-gray-500">2 unread</span>
+                    <span className="font-medium text-gray-700 group-hover:text-blue-700 block transition-colors">Messages</span>
+                    <span className="text-xs text-gray-500">Check your inbox</span>
                   </div>
                 </Link>
-                <Link href="/wishlist" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group">
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                    <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                    </svg>
+                <Link href="/wishlist" className="flex items-center gap-4 p-3 rounded-xl hover:bg-rose-50 transition-colors group border border-transparent hover:border-rose-100">
+                  <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center group-hover:bg-rose-200 transition-colors text-rose-600">
+                    <Heart className="w-5 h-5" />
                   </div>
-                  <span className="font-medium text-gray-700 group-hover:text-gray-900">Saved Items</span>
+                  <div className="flex-1">
+                    <span className="font-medium text-gray-700 group-hover:text-rose-700 block transition-colors">Saved Items</span>
+                    <span className="text-xs text-gray-500">View your wishlist</span>
+                  </div>
                 </Link>
-                <Link href="/dashboard/buyer/profile" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                <Link href="/dashboard/buyer/profile" className="flex items-center gap-4 p-3 rounded-xl hover:bg-purple-50 transition-colors group border border-transparent hover:border-purple-100">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors text-purple-600">
+                    <Settings className="w-5 h-5" />
                   </div>
-                  <span className="font-medium text-gray-700 group-hover:text-gray-900">Edit Profile</span>
+                  <div className="flex-1">
+                    <span className="font-medium text-gray-700 group-hover:text-purple-700 block transition-colors">Settings</span>
+                    <span className="text-xs text-gray-500">Manage account</span>
+                  </div>
                 </Link>
               </div>
             </div>
 
             {/* Help Card */}
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-              <h3 className="text-lg font-bold mb-2">Need Help?</h3>
-              <p className="text-sm text-white/90 mb-4">
-                Our support team is available 24/7 to assist you with any questions.
+            <div className="bg-gradient-to-br from-primary to-primary-dark rounded-2xl p-6 text-white shadow-lg shadow-primary/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-black/10 rounded-full blur-xl"></div>
+              
+              <h3 className="text-lg font-bold mb-2 relative z-10">Need Help?</h3>
+              <p className="text-sm text-white/90 mb-6 relative z-10 leading-relaxed">
+                Our support team is available 24/7 to assist you with any questions or issues.
               </p>
-              <button className="bg-white text-blue-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors w-full">
+              <button className="bg-white text-primary px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors w-full shadow-sm relative z-10">
                 Contact Support
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Saved Items Section */}
-        <div className="mt-12">
+        <motion.div variants={itemVariants} className="mt-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 font-heading">Saved Items</h2>
-            <Link href="/wishlist" className="text-sm font-medium text-primary hover:underline">
+            <h2 className="text-xl font-bold text-gray-900 font-heading flex items-center gap-2">
+              <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
+              Saved Items
+            </h2>
+            <Link href="/wishlist" className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
               View All
             </Link>
           </div>
@@ -290,18 +320,19 @@ export default function BuyerDashboard() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-xl p-12 text-center border border-gray-200">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-              </svg>
-              <p className="text-gray-500 mb-4">No saved items yet</p>
+            <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-8 h-8 text-gray-300" />
+              </div>
+              <p className="text-gray-900 font-medium mb-1">No saved items yet</p>
+              <p className="text-gray-500 text-sm mb-6">Items you love will appear here</p>
               <Link href="/products">
-                <Button variant="primary">Browse Products</Button>
+                <Button variant="primary">Start Shopping</Button>
               </Link>
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

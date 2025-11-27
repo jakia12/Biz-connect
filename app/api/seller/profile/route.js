@@ -3,7 +3,7 @@
  * Get and update seller profile information
  */
 
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/backend/shared/config/auth';
 import connectDB from '@/backend/shared/config/database';
 import User from '@/backend/shared/models/User';
 import { getServerSession } from 'next-auth';
