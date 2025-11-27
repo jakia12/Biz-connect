@@ -7,7 +7,8 @@ import { authOptions } from '@/backend/shared/config/auth';
 import connectDB from '@/backend/shared/config/database';
 import Order from '@/backend/shared/models/Order';
 import Product from '@/backend/shared/models/Product';
-import User from '@/backend/shared/models/User';
+import Review from '@/backend/shared/models/Review';
+import mongoose from 'mongoose';
 import { getServerSession } from 'next-auth';
 
 export async function GET(request) {
@@ -30,15 +31,17 @@ export async function GET(request) {
     lastWeek.setDate(lastWeek.getDate() - 7);
 
     // Parallelize queries for performance
+    const sellerObjectId = new mongoose.Types.ObjectId(sellerId);
+
     const [
       todayOrdersCount,
       weeklyRevenueResult,
       totalProducts,
-      sellerProfile
+      reviewStatsResult
     ] = await Promise.all([
       // 1. Today's Orders
       Order.countDocuments({
-        sellerId,
+        sellerId: sellerObjectId,
         createdAt: { $gte: today }
       }),
 
@@ -46,7 +49,7 @@ export async function GET(request) {
       Order.aggregate([
         {
           $match: {
-            sellerId: { $eq: new User()._id.constructor(sellerId) }, // Ensure ObjectId
+            sellerId: sellerObjectId,
             createdAt: { $gte: lastWeek },
             status: { $nin: ['cancelled', 'refunded'] } // Exclude cancelled/refunded
           }
@@ -61,15 +64,25 @@ export async function GET(request) {
 
       // 3. Total Active Products
       Product.countDocuments({
-        sellerId,
+        sellerId: sellerObjectId,
         status: 'active'
       }),
 
-      // 4. Seller Profile (for Rating & Reviews)
-      User.findById(sellerId).select('rating reviewCount')
+      // 4. Review Stats (Calculate on-the-fly)
+      Review.aggregate([
+        { $match: { sellerId: sellerObjectId } },
+        {
+          $group: {
+            _id: null,
+            avgRating: { $avg: '$rating' },
+            totalReviews: { $sum: 1 }
+          }
+        }
+      ])
     ]);
 
     const weeklyRevenue = weeklyRevenueResult[0]?.total || 0;
+    const reviewStats = reviewStatsResult[0] || { avgRating: 0, totalReviews: 0 };
 
     return Response.json({
       success: true,
@@ -77,8 +90,8 @@ export async function GET(request) {
         todayOrders: todayOrdersCount,
         weeklyRevenue,
         totalProducts,
-        avgRating: sellerProfile?.rating || 0,
-        totalReviews: sellerProfile?.reviewCount || 0
+        avgRating: Math.round((reviewStats.avgRating || 0) * 10) / 10, // Round to 1 decimal
+        totalReviews: reviewStats.totalReviews || 0
       }
     });
 

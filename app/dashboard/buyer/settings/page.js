@@ -95,6 +95,8 @@ export default function BuyerSettingsPage() {
       if (result.success) {
         toast.success('Profile updated successfully');
         setUserData(result.user);
+        // Reload page to refresh session and update sidebar name
+        setTimeout(() => window.location.reload(), 1000);
       } else {
         toast.error(result.error || 'Failed to update profile');
       }

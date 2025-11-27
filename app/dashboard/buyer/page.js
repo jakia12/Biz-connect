@@ -255,7 +255,7 @@ export default function BuyerDashboard() {
                     <span className="text-xs text-gray-500">Check your inbox</span>
                   </div>
                 </Link>
-                <Link href="/wishlist" className="flex items-center gap-4 p-3 rounded-xl hover:bg-rose-50 transition-colors group border border-transparent hover:border-rose-100">
+                <Link href="/dashboard/buyer/saved" className="flex items-center gap-4 p-3 rounded-xl hover:bg-rose-50 transition-colors group border border-transparent hover:border-rose-100">
                   <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center group-hover:bg-rose-200 transition-colors text-rose-600">
                     <Heart className="w-5 h-5" />
                   </div>
@@ -264,7 +264,7 @@ export default function BuyerDashboard() {
                     <span className="text-xs text-gray-500">View your wishlist</span>
                   </div>
                 </Link>
-                <Link href="/dashboard/buyer/profile" className="flex items-center gap-4 p-3 rounded-xl hover:bg-purple-50 transition-colors group border border-transparent hover:border-purple-100">
+                <Link href="/dashboard/buyer/settings" className="flex items-center gap-4 p-3 rounded-xl hover:bg-purple-50 transition-colors group border border-transparent hover:border-purple-100">
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors text-purple-600">
                     <Settings className="w-5 h-5" />
                   </div>

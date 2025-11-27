@@ -27,6 +27,7 @@ export async function GET(request) {
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const search = searchParams.get('search');
+    const sellerId = searchParams.get('sellerId'); // Add seller filter
     
     // Sorting
     const sort = searchParams.get('sort') || 'createdAt';
@@ -58,6 +59,11 @@ export async function GET(request) {
       ];
     }
 
+    // Filter by seller if provided
+    if (sellerId) {
+      query.sellerId = sellerId;
+    }
+
     // Fetch products with seller info
     const products = await Product.find(query)
       .populate('sellerId', 'name verified')
@@ -65,6 +71,37 @@ export async function GET(request) {
       .skip(skip)
       .limit(limit)
       .lean();
+
+    // Fetch review stats for these products
+    const productIds = products.map(p => p._id);
+    const Review = (await import('@/backend/shared/models/Review')).default;
+    
+    const reviewStats = await Review.aggregate([
+      { $match: { productId: { $in: productIds } } },
+      {
+        $group: {
+          _id: '$productId',
+          avgRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Map stats to products
+    const statsMap = {};
+    reviewStats.forEach(stat => {
+      statsMap[stat._id.toString()] = {
+        rating: Math.round(stat.avgRating * 10) / 10,
+        reviews: stat.totalReviews
+      };
+    });
+
+    // Attach stats to products
+    products.forEach(product => {
+      const stats = statsMap[product._id.toString()] || { rating: 0, reviews: 0 };
+      product.rating = stats.rating;
+      product.reviews = stats.reviews;
+    });
 
     const totalProducts = await Product.countDocuments(query);
 

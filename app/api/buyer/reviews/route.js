@@ -105,6 +105,27 @@ export async function POST(request) {
       isVerifiedPurchase: true,
     });
 
+    // Update seller's rating and review count
+    const User = (await import('@/backend/shared/models/User')).default;
+    
+    const stats = await Review.aggregate([
+      { $match: { sellerId: product.sellerId } },
+      {
+        $group: {
+          _id: '$sellerId',
+          avgRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 },
+        },
+      },
+    ]);
+
+    if (stats.length > 0) {
+      await User.findByIdAndUpdate(product.sellerId, {
+        rating: Math.round(stats[0].avgRating * 10) / 10, // Round to 1 decimal
+        reviewCount: stats[0].totalReviews,
+      });
+    }
+
     return Response.json(
       {
         success: true,

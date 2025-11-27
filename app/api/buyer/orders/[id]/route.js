@@ -55,7 +55,7 @@ export async function GET(request, { params }) {
   }
 }
 
-import { createOrderCancellationNotification, createOrderStatusNotification } from '@/lib/notifications';
+import { createOrderCancellationNotification } from '@/lib/notifications';
 
 /**
  * PUT /api/buyer/orders/[id]
@@ -104,15 +104,9 @@ export async function PUT(request, { params }) {
     await order.save();
 
     // Send notifications
-    // 1. Notify Buyer
-    await createOrderStatusNotification(
-      session.user.id,
-      order._id,
-      order.orderId,
-      'cancelled'
-    );
 
-    // 2. Notify Seller
+
+    // Notify Seller
     await createOrderCancellationNotification(
       order.sellerId,
       order._id,

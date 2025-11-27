@@ -28,6 +28,29 @@ export default function CheckoutPage() {
     }
   }, [cart, router]);
 
+  // Fetch user profile to auto-fill shipping address
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await fetch('/api/user/profile');
+        const data = await response.json();
+        
+        if (data.success && data.user) {
+          setFormData(prev => ({
+            ...prev,
+            fullName: data.user.name || '',
+            phone: data.user.phone || '',
+            address: data.user.businessAddress || '',
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));

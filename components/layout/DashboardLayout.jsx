@@ -46,8 +46,8 @@ export default function DashboardLayout({ children, role = 'buyer' }) {
     { 
       icon: '💬', 
       label: 'Messages', 
-      href: '/messages',
-      path: '/messages'
+      href: '/dashboard/buyer/messages',
+      path: '/dashboard/buyer/messages'
     },
     { 
       icon: '⚙️', 
@@ -85,8 +85,8 @@ export default function DashboardLayout({ children, role = 'buyer' }) {
     { 
       icon: '💬', 
       label: 'Messages', 
-      href: '/messages',
-      path: '/messages'
+      href: '/dashboard/seller/messages',
+      path: '/dashboard/seller/messages'
     },
     { 
       icon: '📈', 

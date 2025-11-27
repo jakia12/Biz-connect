@@ -69,6 +69,18 @@ const SellerProfileSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    taxId: {
+      type: String,
+      default: '',
+    },
+    website: {
+      type: String,
+      default: '',
+    },
+    bankAccount: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: true,

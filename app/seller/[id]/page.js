@@ -23,6 +23,8 @@ export default function SellerProfilePage({ params }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => {
     fetchSellerData();
@@ -32,6 +34,7 @@ export default function SellerProfilePage({ params }) {
     try {
       setLoading(true);
       setProductsLoading(true);
+      setReviewsLoading(true);
 
       console.log('Fetching seller with ID:', sellerId);
 
@@ -39,12 +42,9 @@ export default function SellerProfilePage({ params }) {
       const sellerResponse = await fetch(`/api/sellers/${sellerId}`);
       const sellerData = await sellerResponse.json();
 
-      console.log('Seller response:', sellerData);
-
       if (sellerData.success) {
         setSeller(sellerData.seller);
       } else {
-        console.error('Seller fetch failed:', sellerData.error);
         toast.error(sellerData.error || 'Failed to load seller information');
       }
 
@@ -52,38 +52,27 @@ export default function SellerProfilePage({ params }) {
       const productsResponse = await fetch(`/api/products?sellerId=${sellerId}&limit=100`);
       const productsData = await productsResponse.json();
 
-      console.log('Products response:', productsData);
-
       if (productsData.success) {
         setProducts(productsData.products);
       }
+
+      // Fetch seller's reviews
+      const reviewsResponse = await fetch(`/api/sellers/${sellerId}/reviews`);
+      const reviewsData = await reviewsResponse.json();
+
+      if (reviewsData.success) {
+        setReviews(reviewsData.reviews);
+      }
+
     } catch (error) {
       console.error('Error fetching seller data:', error);
       toast.error('Failed to load seller information');
     } finally {
       setLoading(false);
       setProductsLoading(false);
+      setReviewsLoading(false);
     }
   };
-
-  const reviews = [
-    {
-      id: 1,
-      user: "Karim Ahmed",
-      rating: 5,
-      date: "2 days ago",
-      comment: "Excellent work! Very professional and delivered on time. Highly recommended!",
-      product: "Logo Design"
-    },
-    {
-      id: 2,
-      user: "Samia Rahman",
-      rating: 4,
-      date: "1 week ago",
-      comment: "Good quality design. Communication was smooth throughout the project.",
-      product: "Business Card"
-    },
-  ];
 
   if (loading) {
     return (
@@ -154,11 +143,11 @@ export default function SellerProfilePage({ params }) {
                       <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
-                      <span className="font-bold text-gray-900">{seller.rating?.toFixed(1) || '4.5'}</span>
+                      <span className="font-bold text-gray-900">{seller.rating?.toFixed(1) || '0.0'}</span>
                       <span>({seller.reviewCount || 0} reviews)</span>
                     </div>
                     <span>•</span>
-                    <span>{seller.totalOrders || 0} sales</span>
+                    <span>{products.length} Products</span>
                     {seller.businessAddress && (
                       <>
                         <span>•</span>
@@ -167,14 +156,18 @@ export default function SellerProfilePage({ params }) {
                     )}
                   </div>
                 </div>
-                <Link href="/messages">
-                  <Button variant="primary" className="px-6 py-3">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                    </svg>
-                    Contact Seller
-                  </Button>
-                </Link>
+                <button
+                  onClick={() => {
+                    // Redirect to buyer messages and initiate conversation
+                    window.location.href = `/dashboard/buyer/messages?seller=${sellerId}`;
+                  }}
+                  className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  Contact Seller
+                </button>
               </div>
             </div>
           </div>
@@ -199,6 +192,14 @@ export default function SellerProfilePage({ params }) {
                   <span className="text-gray-600">Total Products</span>
                   <span className="font-medium text-gray-900">{products.length}</span>
                 </div>
+                {seller.website && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Website</span>
+                    <a href={seller.website} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline truncate max-w-[150px]">
+                      {seller.website.replace(/^https?:\/\//, '')}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -208,29 +209,11 @@ export default function SellerProfilePage({ params }) {
               <div className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Quality</span>
-                    <span className="text-sm font-bold text-gray-900">4.9/5</span>
+                    <span className="text-sm text-gray-600">Average Rating</span>
+                    <span className="text-sm font-bold text-gray-900">{seller.rating?.toFixed(1) || '0.0'}/5</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{width: '98%'}}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Communication</span>
-                    <span className="text-sm font-bold text-gray-900">4.8/5</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{width: '96%'}}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Delivery</span>
-                    <span className="text-sm font-bold text-gray-900">5.0/5</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{width: '100%'}}></div>
+                    <div className="bg-primary h-2 rounded-full" style={{width: `${(seller.rating || 0) / 5 * 100}%`}}></div>
                   </div>
                 </div>
               </div>
@@ -305,29 +288,67 @@ export default function SellerProfilePage({ params }) {
             )}
 
             {activeTab === 'reviews' && (
-              <div className="space-y-6">
-                {reviews.map((review) => (
-                  <div key={review.id} className="bg-white rounded-xl border border-gray-200 p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="font-bold text-gray-900">{review.user}</h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex items-center gap-1">
-                            {[...Array(review.rating)].map((_, i) => (
-                              <svg key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-500">{review.date}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">For: {review.product}</p>
-                      </div>
+              reviewsLoading ? (
+                <div className="space-y-6">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+                      <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                     </div>
-                    <p className="text-gray-700">{review.comment}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : reviews.length === 0 ? (
+                <div className="bg-white rounded-xl p-12 text-center border border-gray-200">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  </svg>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No reviews yet</h3>
+                  <p className="text-gray-600">This seller hasn't received any reviews yet</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {reviews.map((review) => (
+                    <div key={review._id} className="bg-white rounded-xl border border-gray-200 p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-bold text-gray-900">{review.buyerId?.name || 'Anonymous'}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <svg 
+                                  key={i} 
+                                  className={`w-4 h-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`} 
+                                  fill="currentColor" 
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                            </div>
+                            <span className="text-sm text-gray-500">
+                              {new Date(review.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-1">
+                            For: <Link href={`/products/${review.productId?._id}`} className="hover:text-primary hover:underline">{review.productId?.title || 'Product'}</Link>
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-gray-700">{review.comment}</p>
+                      {review.images && review.images.length > 0 && (
+                        <div className="flex gap-2 mt-3">
+                          {review.images.map((img, idx) => (
+                            <div key={idx} className="relative w-16 h-16 rounded-md overflow-hidden border border-gray-200">
+                              <Image src={img} alt="Review image" fill className="object-cover" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )
             )}
           </div>
         </div>

@@ -30,29 +30,68 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Fetch seller
-    const seller = await User.findOne({
-      _id: id,
-      role: 'seller'
-    })
-      .select('name email businessName businessCategory businessDescription businessAddress profileImage rating reviewCount totalOrders createdAt')
-      .lean();
+    // Parallelize queries
+    const mongoose = require('mongoose');
+    const sellerObjectId = new mongoose.Types.ObjectId(id);
 
-    console.log('Seller found:', seller ? 'Yes' : 'No');
-    if (seller) {
-      console.log('Seller details:', { name: seller.name, email: seller.email });
-    }
+    const [user, sellerProfile, reviewStats] = await Promise.all([
+      // 1. Fetch User
+      User.findOne({ _id: id, role: 'seller' })
+        .select('name email profileImage createdAt')
+        .lean(),
 
-    if (!seller) {
+      // 2. Fetch Seller Profile
+      (async () => {
+        const SellerProfile = (await import('@/backend/shared/models/SellerProfile')).default;
+        return SellerProfile.findOne({ userId: id }).lean();
+      })(),
+
+      // 3. Aggregate Reviews
+      (async () => {
+        const Review = (await import('@/backend/shared/models/Review')).default;
+        const stats = await Review.aggregate([
+          { $match: { sellerId: sellerObjectId } },
+          {
+            $group: {
+              _id: null,
+              avgRating: { $avg: '$rating' },
+              totalReviews: { $sum: 1 }
+            }
+          }
+        ]);
+        return stats[0] || { avgRating: 0, totalReviews: 0 };
+      })()
+    ]);
+
+    if (!user) {
       return Response.json(
         { error: 'Seller not found' },
         { status: 404 }
       );
     }
 
+    // Merge data
+    const sellerData = {
+      ...user,
+      // Prefer SellerProfile data, fallback to User data (if any legacy fields existed)
+      businessName: sellerProfile?.businessName || user.name,
+      businessCategory: sellerProfile?.category,
+      businessDescription: sellerProfile?.description,
+      businessAddress: sellerProfile?.location || sellerProfile?.district,
+      // Use dynamic stats
+      rating: Math.round(reviewStats.avgRating * 10) / 10,
+      reviewCount: reviewStats.totalReviews,
+      // Include other profile fields
+      businessType: sellerProfile?.businessType,
+      businessHours: sellerProfile?.businessHours,
+      taxId: sellerProfile?.taxId,
+      website: sellerProfile?.website,
+      isVerified: sellerProfile?.verified || false,
+    };
+
     return Response.json({
       success: true,
-      seller,
+      seller: sellerData,
     });
   } catch (error) {
     console.error('Error fetching seller:', error);

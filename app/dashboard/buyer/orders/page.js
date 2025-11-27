@@ -148,7 +148,7 @@ export default function BuyerOrdersPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <Link href={`/messages`}>
+                  <Link href={`/dashboard/buyer/messages?seller=${order.sellerId?._id}`}>
                     <Button variant="outline" size="sm">Contact Seller</Button>
                   </Link>
                   <Link href={`/dashboard/buyer/orders/${order._id}`}>

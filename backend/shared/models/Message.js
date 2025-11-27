@@ -17,6 +17,11 @@ const MessageSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, 'Receiver ID is required'],
     },
+    conversationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Conversation',
+      required: true,
+    },
     productId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',

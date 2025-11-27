@@ -110,17 +110,66 @@ export async function POST(request) {
       );
     }
 
+    const senderId = session.user.id;
+    const senderRole = session.user.role;
+
+    // Import Conversation model
+    const Conversation = (await import('@/backend/shared/models/Conversation')).default;
+
+    // Determine buyer and seller IDs
+    const buyerId = senderRole === 'buyer' ? senderId : receiverId;
+    const sellerId = senderRole === 'seller' ? senderId : receiverId;
+
+    // Find or create conversation
+    let conversation = await Conversation.findOne({
+      'participants.buyer': buyerId,
+      'participants.seller': sellerId,
+    });
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        participants: { buyer: buyerId, seller: sellerId },
+        lastMessage: {
+          content: message,
+          senderId,
+          timestamp: new Date(),
+        },
+        unreadCount: {
+          buyer: senderRole === 'seller' ? 1 : 0,
+          seller: senderRole === 'buyer' ? 1 : 0,
+        },
+      });
+    } else {
+      // Update conversation
+      conversation.lastMessage = {
+        content: message,
+        senderId,
+        timestamp: new Date(),
+      };
+      
+      // Increment unread count for receiver
+      if (senderRole === 'buyer') {
+        conversation.unreadCount.seller += 1;
+      } else {
+        conversation.unreadCount.buyer += 1;
+      }
+      
+      await conversation.save();
+    }
+
+    // Create message with conversationId
     const newMessage = await Message.create({
-      senderId: session.user.id,
+      conversationId: conversation._id,
+      senderId,
       receiverId,
-      content: message, // Model uses 'content' field
+      content: message,
       productId: productId || null,
       isRead: false,
     });
 
     const populatedMessage = await Message.findById(newMessage._id)
-      .populate('senderId', 'name email role')
-      .populate('receiverId', 'name email role')
+      .populate('senderId', 'name email role profileImage businessName')
+      .populate('receiverId', 'name email role profileImage businessName')
       .populate('productId', 'title images')
       .lean();
 
@@ -129,6 +178,7 @@ export async function POST(request) {
         success: true,
         message: 'Message sent successfully',
         data: populatedMessage,
+        conversationId: conversation._id,
       },
       { status: 201 }
     );

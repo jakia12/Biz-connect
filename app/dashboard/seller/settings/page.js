@@ -5,11 +5,11 @@
 
 'use client';
 
+import SellerProfileForm from '@/components/dashboard/seller/SellerProfileForm';
 import Button from '@/components/ui/Button';
 import FormField from '@/components/ui/FormField';
-import { passwordChangeSchema, sellerSettingsSchema } from '@/lib/validation-schemas';
+import { passwordChangeSchema } from '@/lib/validation-schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -19,16 +19,7 @@ export default function SellerSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState(null);
 
-  // Profile Form
-  const {
-    register: registerProfile,
-    handleSubmit: handleProfileSubmit,
-    reset: resetProfile,
-    formState: { errors: profileErrors, isSubmitting: isProfileSubmitting }
-  } = useForm({
-    resolver: zodResolver(sellerSettingsSchema),
-    mode: 'onBlur',
-  });
+  // Password Form
 
   // Password Form
   const {
@@ -55,13 +46,7 @@ export default function SellerSettingsPage() {
       if (data.success) {
         setUserData(data.user);
         // Reset form with fetched data
-        resetProfile({
-          businessName: data.user.businessName || '',
-          email: data.user.email || '',
-          phone: data.user.phone || '',
-          address: data.user.businessAddress || '',
-          description: data.user.businessDescription || '',
-        });
+
       } else {
         toast.error(data.error || 'Failed to fetch profile data');
       }
@@ -73,33 +58,7 @@ export default function SellerSettingsPage() {
     }
   };
 
-  const onProfileSubmit = async (data) => {
-    try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: data.businessName,
-          phone: data.phone,
-          businessName: data.businessName,
-          address: data.address,
-          description: data.description,
-        }),
-      });
 
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success('Profile updated successfully');
-        setUserData(result.user);
-      } else {
-        toast.error(result.error || 'Failed to update profile');
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
-    }
-  };
 
   const onPasswordSubmit = async (data) => {
     try {
@@ -152,7 +111,7 @@ export default function SellerSettingsPage() {
                 activeTab === 'profile' ? 'bg-primary/5 text-primary' : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              Business Profile
+              Seller Profile
             </button>
             <button
               onClick={() => setActiveTab('password')}
@@ -184,86 +143,11 @@ export default function SellerSettingsPage() {
         {/* Content Area */}
         <div className="lg:col-span-3">
           
-          {/* Business Profile Tab */}
+          {/* Seller Profile Tab */}
           {activeTab === 'profile' && (
             <div className="bg-white rounded-xl border border-gray-200 p-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Business Profile</h2>
-              
-              <form onSubmit={handleProfileSubmit(onProfileSubmit)}>
-                {/* Avatar Upload */}
-                <div className="mb-8 flex items-center gap-6">
-                  <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
-                    <Image 
-                      src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=200&h=200&fit=crop" 
-                      alt="Business Logo" 
-                      fill 
-                      className="object-cover" 
-                    />
-                  </div>
-                  <div>
-                    <Button type="button" variant="outline" size="sm" className="mb-2">Change Logo</Button>
-                    <p className="text-xs text-gray-500">JPG, GIF or PNG. Max size of 800K</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <FormField
-                    label="Business Name"
-                    name="businessName"
-                    register={registerProfile}
-                    error={profileErrors.businessName}
-                    required
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      label="Email Address"
-                      name="email"
-                      type="email"
-                      register={registerProfile}
-                      error={profileErrors.email}
-                      required
-                    />
-                    <FormField
-                      label="Phone Number"
-                      name="phone"
-                      type="tel"
-                      register={registerProfile}
-                      error={profileErrors.phone}
-                      required
-                    />
-                  </div>
-
-                  <FormField
-                    label="Business Address"
-                    name="address"
-                    type="textarea"
-                    rows={3}
-                    register={registerProfile}
-                    error={profileErrors.address}
-                    required
-                  />
-
-                  <FormField
-                    label="Business Description"
-                    name="description"
-                    type="textarea"
-                    rows={4}
-                    register={registerProfile}
-                    error={profileErrors.description}
-                    required
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  variant="primary" 
-                  className="mt-6"
-                  disabled={isProfileSubmitting}
-                >
-                  {isProfileSubmitting ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </form>
+              <h2 className="text-xl font-bold text-gray-900 mb-6 w-full max-w-4xl">Seller Profile</h2>
+              <SellerProfileForm userData={userData} onSuccess={setUserData} />
             </div>
           )}
 
