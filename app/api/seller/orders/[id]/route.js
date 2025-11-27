@@ -6,6 +6,7 @@
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/backend/shared/config/database';
 import Order from '@/backend/shared/models/Order';
+import { createOrderStatusNotification } from '@/lib/notifications';
 import { getServerSession } from 'next-auth';
 
 /**
@@ -14,6 +15,9 @@ import { getServerSession } from 'next-auth';
  */
 export async function GET(request, { params }) {
   try {
+    // Unwrap the params Promise
+    const { id } = await params;
+    
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'seller') {
       return Response.json(
@@ -25,7 +29,7 @@ export async function GET(request, { params }) {
     await connectDB();
 
     const order = await Order.findOne({
-      _id: params.id,
+      _id: id,
       sellerId: session.user.id,
     })
       .populate('buyerId', 'name email phone')
@@ -58,6 +62,9 @@ export async function GET(request, { params }) {
  */
 export async function PATCH(request, { params }) {
   try {
+    // Unwrap the params Promise
+    const { id } = await params;
+    
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'seller') {
       return Response.json(
@@ -73,7 +80,7 @@ export async function PATCH(request, { params }) {
 
     // Find order and verify ownership
     const order = await Order.findOne({
-      _id: params.id,
+      _id: id,
       sellerId: session.user.id,
     });
 
@@ -92,6 +99,14 @@ export async function PATCH(request, { params }) {
       if (status === 'delivered') {
         order.deliveredAt = new Date();
       }
+
+      // Notify buyer of status change
+      await createOrderStatusNotification(
+        order.buyerId,
+        order._id,
+        order.orderId,
+        status
+      );
     }
     
     if (trackingNumber) order.trackingNumber = trackingNumber;

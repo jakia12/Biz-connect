@@ -11,10 +11,14 @@ import ProductCard from '@/components/product/ProductCard';
 import Button from '@/components/ui/Button';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function ProductDetailPage({ params }) {
+  // Unwrap the params Promise
+  const unwrappedParams = use(params);
+  const productId = unwrappedParams.id;
+  
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [reviewStats, setReviewStats] = useState(null);
@@ -26,7 +30,8 @@ export default function ProductDetailPage({ params }) {
 
   useEffect(() => {
     fetchProduct();
-  }, [params.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]);
 
   const addToCart = async () => {
     try {
@@ -34,7 +39,7 @@ export default function ProductDetailPage({ params }) {
       const response = await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: params.id, quantity }),
+        body: JSON.stringify({ productId, quantity }),
       });
 
       const data = await response.json();
@@ -53,7 +58,7 @@ export default function ProductDetailPage({ params }) {
 
   const fetchProduct = async () => {
     try {
-      const response = await fetch(`/api/products/${params.id}`);
+      const response = await fetch(`/api/products/${productId}`);
       const data = await response.json();
 
       if (data.success) {

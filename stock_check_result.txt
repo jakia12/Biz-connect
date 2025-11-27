@@ -1,0 +1,6 @@
+Product found:
+ID: 6927abb7d94f33e47bc867c1
+Title: Industrial sewing machine
+Stock: 100 (Type: number)
+Status: active
+Price: 1500

@@ -1,5 +1,8 @@
 import SessionProvider from "@/components/SessionProvider";
+import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from 'react-hot-toast';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,7 +26,14 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          <WishlistProvider>
+            <CartProvider>
+              {children}
+              <Toaster position="top-right" />
+            </CartProvider>
+          </WishlistProvider>
+        </SessionProvider>
       </body>
     </html>
   );

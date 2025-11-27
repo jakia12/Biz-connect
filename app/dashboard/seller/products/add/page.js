@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 
 export default function AddProductPage() {
   const router = useRouter();
-  const [productType, setProductType] = useState('product');
+  const [imageUrls, setImageUrls] = useState(['']); // Start with one empty field
   
   const {
     register,
@@ -42,8 +42,31 @@ export default function AddProductPage() {
     'Other',
   ];
 
+  // Image URL handlers
+  const handleAddImage = () => {
+    if (imageUrls.length < 10) {
+      setImageUrls([...imageUrls, '']);
+    } else {
+      toast.error('Maximum 10 images allowed');
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    const newUrls = imageUrls.filter((_, i) => i !== index);
+    setImageUrls(newUrls.length ? newUrls : ['']); // Always keep at least one
+  };
+
+  const handleImageChange = (index, value) => {
+    const newUrls = [...imageUrls];
+    newUrls[index] = value;
+    setImageUrls(newUrls);
+  };
+
   const handleSubmitForm = async (data) => {
     try {
+      // Filter out empty image URLs
+      const validImages = imageUrls.filter(url => url.trim() !== '');
+
       // Convert tags from comma-separated string to array
       const formattedData = {
         ...data,
@@ -51,6 +74,7 @@ export default function AddProductPage() {
         stock: parseInt(data.stock) || 0,
         price: parseFloat(data.price),
         minOrderQuantity: parseInt(data.minOrderQuantity) || 1,
+        images: validImages,
       };
 
       const response = await fetch('/api/seller/products', {
@@ -83,6 +107,9 @@ export default function AddProductPage() {
     const data = Object.fromEntries(formData);
     data.status = 'inactive'; // Save as draft
     
+    // Filter out empty image URLs
+    const validImages = imageUrls.filter(url => url.trim() !== '');
+
     try {
       const response = await fetch('/api/seller/products', {
         method: 'POST',
@@ -94,6 +121,7 @@ export default function AddProductPage() {
           tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : [],
           stock: parseInt(data.stock) || 0,
           price: parseFloat(data.price),
+          images: validImages,
         }),
       });
 
@@ -265,14 +293,44 @@ export default function AddProductPage() {
 
             {/* Images */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="font-bold text-gray-900 mb-4">Images</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-gray-900">Product Images</h3>
+                <button
+                  type="button"
+                  onClick={handleAddImage}
+                  className="text-sm text-primary hover:text-primary-dark font-medium"
+                >
+                  + Add Image URL
+                </button>
+              </div>
               
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-gray-600 mb-2">Image upload coming soon</p>
-                <p className="text-xs text-gray-500">For now, you can add image URLs after creating the product</p>
+              <div className="space-y-3">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={(e) => handleImageChange(index, e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                    />
+                    {imageUrls.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="p-3 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Remove image"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <p className="text-xs text-gray-500 mt-2">
+                  Enter direct URLs for your product images. You can add up to 10 images.
+                </p>
               </div>
             </div>
 
@@ -335,3 +393,4 @@ export default function AddProductPage() {
     </div>
   );
 }
+

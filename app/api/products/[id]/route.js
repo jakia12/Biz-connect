@@ -13,11 +13,14 @@ import Review from '@/backend/shared/models/Review';
  */
 export async function GET(request, { params }) {
   try {
+    // Unwrap the params Promise
+    const { id } = await params;
+    
     await connectDB();
 
     // Fetch product with seller info
-    const product = await Product.findById(params.id)
-      .populate('sellerId', 'name email verified phone')
+    const product = await Product.findById(id)
+      .populate('sellerId', 'name email businessName businessAddress profileImage rating reviewCount verified phone')
       .lean();
 
     if (!product) {
@@ -28,10 +31,10 @@ export async function GET(request, { params }) {
     }
 
     // Increment view count
-    await Product.findByIdAndUpdate(params.id, { $inc: { views: 1 } });
+    await Product.findByIdAndUpdate(id, { $inc: { views: 1 } });
 
     // Fetch reviews for this product
-    const reviews = await Review.find({ productId: params.id })
+    const reviews = await Review.find({ productId: id })
       .populate('buyerId', 'name image')
       .sort({ createdAt: -1 })
       .limit(10)

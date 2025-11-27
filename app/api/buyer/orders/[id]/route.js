@@ -14,6 +14,9 @@ import { getServerSession } from 'next-auth';
  */
 export async function GET(request, { params }) {
   try {
+    // Unwrap the params Promise
+    const { id } = await params;
+    
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'buyer') {
       return Response.json(
@@ -25,7 +28,7 @@ export async function GET(request, { params }) {
     await connectDB();
 
     const order = await Order.findOne({
-      _id: params.id,
+      _id: id,
       buyerId: session.user.id,
     })
       .populate('sellerId', 'name email phone')

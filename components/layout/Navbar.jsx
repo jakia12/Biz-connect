@@ -5,12 +5,17 @@
 
 'use client';
 
+import { useCart } from '@/context/CartContext';
+import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useState } from 'react';
+import NotificationBell from '../ui/NotificationBell';
 
 export default function Navbar() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { cart } = useCart();
+  const { data: session } = useSession();
 
   const categories = [
     { name: "Food & Beverage", icon: "🍔", type: "product" },
@@ -51,8 +56,53 @@ export default function Navbar() {
                 <option>USD ($)</option>
               </select>
               <div className="h-3 w-px bg-gray-300"></div>
-              <Link href="/login" className="hover:text-primary transition-colors">Sign In</Link>
-              <Link href="/register" className="text-primary hover:text-primary-dark transition-colors">Join as Seller</Link>
+              
+              {session ? (
+                <div className="relative group z-50">
+                  <button className="flex items-center gap-2 hover:text-primary transition-colors font-medium">
+                    {session.user.name || 'User'}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="font-bold text-gray-900 truncate">{session.user.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
+                    </div>
+                    
+                    <Link href={`/dashboard/${session.user.role}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
+                      Dashboard
+                    </Link>
+                    
+                    <Link href={`/dashboard/${session.user.role}/orders`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
+                      {session.user.role === 'seller' ? 'Manage Orders' : 'My Orders'}
+                    </Link>
+                    
+                    <Link 
+                      href={`/dashboard/${session.user.role}/${session.user.role === 'seller' ? 'profile' : 'settings'}`} 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary"
+                    >
+                      Profile
+                    </Link>
+                    
+                    <div className="border-t border-gray-100 mt-1 pt-1">
+                      <button 
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Link href="/login" className="hover:text-primary transition-colors">Sign In</Link>
+                  <Link href="/register" className="text-primary hover:text-primary-dark transition-colors">Join as Seller</Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -121,12 +171,19 @@ export default function Navbar() {
               <span className="text-[10px] font-medium text-gray-500 group-hover:text-primary transition-colors">Chat</span>
             </Link>
 
+            {/* Notification Bell */}
+            <NotificationBell />
+
             <Link href="/cart" className="relative group flex flex-col items-center gap-1">
               <div className="relative p-1">
                 <svg className="w-6 h-6 text-gray-600 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">2</span>
+                {cart?.itemCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                    {cart.itemCount}
+                  </span>
+                )}
               </div>
               <span className="text-[10px] font-medium text-gray-500 group-hover:text-primary transition-colors">Cart</span>
             </Link>

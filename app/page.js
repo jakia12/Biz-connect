@@ -14,22 +14,45 @@ import Button from '@/components/ui/Button';
 import { fadeInUp, scaleIn, staggerContainer } from '@/utils/animations';
 import { motion } from 'framer-motion';
 import {
-  ArrowRight,
-  Award,
-  Briefcase,
-  CheckCircle2,
-  Package,
-  ShieldCheck,
-  ShoppingBag,
-  Sparkles,
-  Star,
-  TrendingUp,
-  Zap
+    ArrowRight,
+    Award,
+    Briefcase,
+    CheckCircle2,
+    Package,
+    ShieldCheck,
+    ShoppingBag,
+    Sparkles,
+    Star,
+    TrendingUp,
+    Zap
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function HomePage() {
+  const [sellers, setSellers] = useState([]);
+  const [sellersLoading, setSellersLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSellers();
+  }, []);
+
+  const fetchSellers = async () => {
+    try {
+      setSellersLoading(true);
+      const response = await fetch('/api/sellers?limit=4');
+      const data = await response.json();
+      
+      if (data.success) {
+        setSellers(data.sellers);
+      }
+    } catch (error) {
+      console.error('Error fetching sellers:', error);
+    } finally {
+      setSellersLoading(false);
+    }
+  };
   const serviceCategories = [
     { 
       name: "Graphics & Design", 
@@ -468,49 +491,74 @@ export default function HomePage() {
             </Link>
           </motion.div>
 
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-            variants={staggerContainer}
-          >
-            {verifiedSellers.map((seller) => (
-              <motion.div 
-                key={seller.id}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all border border-gray-100"
-                variants={fadeInUp}
-                whileHover={{ y: -8 }}
-              >
-                <Link href={`/seller/${seller.id}`}>
-                  <div className="relative h-48">
-                    <Image 
-                      src={seller.image}
-                      alt={seller.name}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Verified
-                    </div>
-                  </div>
+          {sellersLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 animate-pulse">
+                  <div className="h-48 bg-gray-200"></div>
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{seller.name}</h3>
-                    <p className="text-sm text-gray-600 mb-4">{seller.category}</p>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="font-bold text-gray-900">{seller.rating}</span>
-                      </div>
-                      <span className="text-gray-500 text-sm">({seller.reviews} reviews)</span>
+                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                    <div className="flex gap-2 mb-3">
+                      <div className="h-4 bg-gray-200 rounded w-8"></div>
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
                     </div>
-                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <Zap className="w-4 h-4 text-primary" />
-                      {seller.orders.toLocaleString()} orders completed
-                    </p>
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
                   </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+                </div>
+              ))}
+            </div>
+          ) : sellers.length > 0 ? (
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+              variants={staggerContainer}
+            >
+              {sellers.map((seller) => (
+                <motion.div 
+                  key={seller._id}
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all border border-gray-100"
+                  variants={fadeInUp}
+                  whileHover={{ y: -8 }}
+                >
+                  <Link href={`/seller/${seller._id}`}>
+                    <div className="relative h-48">
+                      <Image 
+                        src={seller.profileImage || 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=300&h=300&fit=crop'}
+                        alt={seller.businessName || seller.name}
+                        fill
+                        className="object-cover"
+                      />
+                      {seller.isVerified && (
+                        <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Verified
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{seller.businessName || seller.name}</h3>
+                      <p className="text-sm text-gray-600 mb-4">{seller.businessCategory || 'General Seller'}</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                          <span className="font-bold text-gray-900">{seller.rating?.toFixed(1) || '0.0'}</span>
+                        </div>
+                        <span className="text-gray-500 text-sm">({seller.reviewCount || 0} reviews)</span>
+                      </div>
+                      <p className="text-sm text-gray-600 flex items-center gap-1">
+                        <Zap className="w-4 h-4 text-primary" />
+                        {seller.totalOrders || 0} orders completed
+                      </p>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No verified sellers found at the moment.</p>
+            </div>
+          )}
         </div>
       </motion.section>
 

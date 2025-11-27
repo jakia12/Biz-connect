@@ -101,7 +101,7 @@ export default function SavedItemsPage() {
           <p className="text-gray-600 mt-4">Loading saved items...</p>
         </div>
       ) : /* Empty State */
-      saved Items.length === 0 ? (
+      savedItems.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

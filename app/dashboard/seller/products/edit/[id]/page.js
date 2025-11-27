@@ -6,16 +6,22 @@
 'use client';
 
 import Button from '@/components/ui/Button';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 export default function EditProductPage({ params }) {
+  // Unwrap the params Promise
+  const unwrappedParams = use(params);
+  const productId = unwrappedParams.id;
+  
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   const {
     register,
@@ -33,11 +39,12 @@ export default function EditProductPage({ params }) {
   // Fetch product data
   useEffect(() => {
     fetchProduct();
-  }, [params.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]);
 
   const fetchProduct = async () => {
     try {
-      const response = await fetch(`/api/seller/products/${params.id}`);
+      const response = await fetch(`/api/seller/products/${productId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -70,7 +77,7 @@ export default function EditProductPage({ params }) {
         minOrderQuantity: parseInt(data.minOrderQuantity) || 1,
       };
 
-      const response = await fetch(`/api/seller/products/${params.id}`, {
+      const response = await fetch(`/api/seller/products/${productId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -93,12 +100,8 @@ export default function EditProductPage({ params }) {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-      return;
-    }
-
     try {
-      const response = await fetch(`/api/seller/products/${params.id}`, {
+      const response = await fetch(`/api/seller/products/${productId}`, {
         method: 'DELETE',
       });
 
@@ -257,7 +260,7 @@ export default function EditProductPage({ params }) {
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={handleDelete}
+                onClick={() => setShowDeleteModal(true)}
                 className="text-red-600 hover:bg-red-50"
               >
                 Delete
@@ -266,6 +269,18 @@ export default function EditProductPage({ params }) {
           </form>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${product?.title}"? This action cannot be undone and all associated data will be permanently removed.`}
+        confirmText="Delete Product"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

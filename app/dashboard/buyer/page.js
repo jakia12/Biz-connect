@@ -1,71 +1,61 @@
-/**
- * Buyer Dashboard
- * View Orders, Saved Items, Quick Reorder
- */
-
 'use client';
 
 import ProductCard from '@/components/product/ProductCard';
 import Button from '@/components/ui/Button';
+import { useWishlist } from '@/context/WishlistContext';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function BuyerDashboard() {
-  // Mock data
-  const recentOrders = [
-    {
-      id: 'ORD-001',
-      product: 'Premium Cotton T-Shirts (Bulk)',
-      seller: 'Garments Direct',
-      amount: 15000,
-      status: 'delivered',
-      date: '2025-11-20',
-      image: '/images/products/tshirt.jpg'
-    },
-    {
-      id: 'ORD-002',
-      product: 'Business Logo Design',
-      seller: 'Creative Studio',
-      amount: 2500,
-      status: 'in-progress',
-      date: '2025-11-24',
-      image: '/images/services/logo.jpg'
-    },
-    {
-      id: 'ORD-003',
-      product: 'Organic Honey 1kg',
-      seller: 'Sundarban Mart',
-      amount: 800,
-      status: 'shipped',
-      date: '2025-11-23',
-      image: '/images/products/honey.jpg'
-    }
-  ];
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    total: 0,
+    inProgress: 0,
+    completed: 0
+  });
+  
+  const { wishlist } = useWishlist();
 
-  const savedItems = [
-    {
-      id: 201,
-      title: "E-commerce Website Development",
-      price: 25000,
-      image: "/images/services/web.jpg",
-      rating: 5.0,
-      reviews: 45,
-      seller: { name: "Tech Pro BD", verified: true }
-    },
-    {
-      id: 202,
-      title: "Packaging Boxes (100 pcs)",
-      price: 1200,
-      image: "/images/products/box.jpg",
-      rating: 4.8,
-      reviews: 34,
-      seller: { name: "Pack It Up", verified: true }
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/orders?limit=5');
+      const data = await response.json();
+
+      if (data.success) {
+        setOrders(data.orders || []);
+        
+        // Calculate stats
+        const total = data.pagination?.total || 0;
+        const inProgress = data.orders?.filter(o => 
+          ['pending', 'processing', 'shipped'].includes(o.status)
+        ).length || 0;
+        const completed = data.orders?.filter(o => 
+          o.status === 'delivered'
+        ).length || 0;
+
+        setStats({ total, inProgress, completed });
+      } else {
+        toast.error(data.error || 'Failed to fetch orders');
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to fetch orders');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getStatusBadge = (status) => {
     const styles = {
       'pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-      'in-progress': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'In Progress' },
+      'processing': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Processing' },
       'shipped': { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Shipped' },
       'delivered': { bg: 'bg-green-100', text: 'text-green-800', label: 'Delivered' },
       'cancelled': { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelled' }
@@ -106,7 +96,7 @@ export default function BuyerDashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">12</h3>
+                <h3 className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.total}</h3>
                 <p className="text-gray-600 text-sm">Total Orders</p>
               </div>
             </div>
@@ -120,7 +110,7 @@ export default function BuyerDashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">3</h3>
+                <h3 className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.inProgress}</h3>
                 <p className="text-gray-600 text-sm">In Progress</p>
               </div>
             </div>
@@ -134,7 +124,7 @@ export default function BuyerDashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">{savedItems.length}</h3>
+                <h3 className="text-2xl font-bold text-gray-900">{wishlist?.length || 0}</h3>
                 <p className="text-gray-600 text-sm">Saved Items</p>
               </div>
             </div>
@@ -148,7 +138,7 @@ export default function BuyerDashboard() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">8</h3>
+                <h3 className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.completed}</h3>
                 <p className="text-gray-600 text-sm">Completed</p>
               </div>
             </div>
@@ -166,41 +156,62 @@ export default function BuyerDashboard() {
                 </Link>
               </div>
               <div className="divide-y divide-gray-200">
-                {recentOrders.map((order) => {
-                  const statusInfo = getStatusBadge(order.status);
-                  return (
-                    <div key={order.id} className="p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex gap-4">
-                        <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0"></div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-2">
-                            <div>
-                              <h3 className="font-bold text-gray-900 mb-1">{order.product}</h3>
-                              <p className="text-sm text-gray-600">by {order.seller}</p>
+                {loading ? (
+                  <div className="p-12 text-center text-gray-500">
+                    <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                    Loading orders...
+                  </div>
+                ) : orders.length === 0 ? (
+                  <div className="p-12 text-center text-gray-500">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <p className="text-lg font-medium mb-2">No orders yet</p>
+                    <p className="text-sm">Start shopping to see your orders here</p>
+                  </div>
+                ) : (
+                  orders.map((order) => {
+                    const statusInfo = getStatusBadge(order.status);
+                    const firstItem = order.items?.[0];
+                    return (
+                      <div key={order._id} className="p-6 hover:bg-gray-50 transition-colors">
+                        <div className="flex gap-4">
+                          <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0"></div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-4 mb-2">
+                              <div>
+                                <h3 className="font-bold text-gray-900 mb-1">
+                                  {firstItem?.title || 'Order'}
+                                  {order.items?.length > 1 && ` +${order.items.length - 1} more`}
+                                </h3>
+                                <p className="text-sm text-gray-600">by {order.sellerId?.businessName || order.sellerId?.name}</p>
+                              </div>
+                              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusInfo.bg} ${statusInfo.text} whitespace-nowrap`}>
+                                {statusInfo.label}
+                              </span>
                             </div>
-                            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusInfo.bg} ${statusInfo.text} whitespace-nowrap`}>
-                              {statusInfo.label}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between mt-3">
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <span>Order ID: {order.id}</span>
-                              <span>•</span>
-                              <span>{order.date}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold text-gray-900">৳{order.amount.toLocaleString()}</span>
-                              {order.status === 'delivered' && (
-                                <button className="text-sm font-medium text-primary hover:underline">Leave Review</button>
-                              )}
-                              <button className="text-sm font-medium text-gray-600 hover:text-gray-900">View Details</button>
+                            <div className="flex items-center justify-between mt-3">
+                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <span>Order ID: {order.orderId}</span>
+                                <span>•</span>
+                                <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="font-bold text-gray-900">৳{order.totalAmount?.toLocaleString()}</span>
+                                {order.status === 'delivered' && (
+                                  <button className="text-sm font-medium text-primary hover:underline">Leave Review</button>
+                                )}
+                                <Link href={`/dashboard/buyer/orders/${order._id}`} className="text-sm font-medium text-gray-600 hover:text-gray-900">
+                                  View Details
+                                </Link>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
@@ -262,11 +273,33 @@ export default function BuyerDashboard() {
               View All
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {savedItems.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {wishlist && wishlist.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {wishlist.slice(0, 4).map((item) => (
+                <ProductCard 
+                  key={item._id} 
+                  product={{
+                    id: item.productId._id,
+                    title: item.productId.title,
+                    price: item.productId.price,
+                    image: item.productId.images?.[0] || item.productId.image,
+                    rating: item.productId.rating,
+                    reviews: item.productId.reviewCount
+                  }} 
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl p-12 text-center border border-gray-200">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+              </svg>
+              <p className="text-gray-500 mb-4">No saved items yet</p>
+              <Link href="/products">
+                <Button variant="primary">Browse Products</Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

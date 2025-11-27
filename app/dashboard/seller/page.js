@@ -1,55 +1,66 @@
-/**
- * Seller Dashboard
- * Stats, Recent Orders, Quick Actions
- */
-
 'use client';
 
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function SellerDashboard() {
-  // Mock data - will be replaced with API calls
-  const stats = {
-    todayOrders: 12,
-    weeklyRevenue: 45000,
-    totalProducts: 28,
-    avgRating: 4.8,
-    totalReviews: 156
-  };
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    todayOrders: 0,
+    weeklyRevenue: 0,
+    totalProducts: 0,
+    avgRating: 0,
+    totalReviews: 0
+  });
 
-  const recentOrders = [
-    {
-      id: 'ORD-001',
-      product: 'Premium Cotton T-Shirts (Bulk)',
-      buyer: 'Karim Ahmed',
-      amount: 15000,
-      status: 'pending',
-      date: '2025-11-25'
-    },
-    {
-      id: 'ORD-002',
-      product: 'Business Logo Design',
-      buyer: 'Samia Rahman',
-      amount: 2500,
-      status: 'completed',
-      date: '2025-11-24'
-    },
-    {
-      id: 'ORD-003',
-      product: 'Organic Honey 1kg',
-      buyer: 'Rahim Mia',
-      amount: 800,
-      status: 'processing',
-      date: '2025-11-24'
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/orders?limit=5');
+      const data = await response.json();
+
+      if (data.success) {
+        setOrders(data.orders || []);
+        
+        // Calculate stats
+        const today = new Date().toDateString();
+        const todayOrders = data.orders?.filter(o => 
+          new Date(o.createdAt).toDateString() === today
+        ).length || 0;
+        
+        const weeklyRevenue = data.orders?.reduce((sum, o) => 
+          sum + (o.totalAmount || 0), 0
+        ) || 0;
+
+        setStats(prev => ({
+          ...prev,
+          todayOrders,
+          weeklyRevenue
+        }));
+      } else {
+        toast.error(data.error || 'Failed to fetch orders');
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to fetch orders');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getStatusBadge = (status) => {
     const styles = {
       pending: 'bg-yellow-100 text-yellow-800',
       processing: 'bg-blue-100 text-blue-800',
       completed: 'bg-green-100 text-green-800',
+      delivered: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800'
     };
     return styles[status] || styles.pending;
@@ -160,22 +171,49 @@ export default function SellerDashboard() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {recentOrders.map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.id}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{order.product}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.buyer}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">৳{order.amount.toLocaleString()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(order.status)}`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button className="text-primary hover:text-primary-dark font-medium">View</button>
+                    {loading ? (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                          Loading orders...
                         </td>
                       </tr>
-                    ))}
+                    ) : orders.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                          <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                          </svg>
+                          <p className="text-lg font-medium mb-2">No orders yet</p>
+                          <p className="text-sm">Orders from buyers will appear here</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      orders.map((order) => {
+                        const firstItem = order.items?.[0];
+                        return (
+                          <tr key={order._id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.orderId}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {firstItem?.title || 'Order'}
+                              {order.items?.length > 1 && ` +${order.items.length - 1}`}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{order.buyerId?.name}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">৳{order.totalAmount?.toLocaleString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(order.status)}`}>
+                                {order.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <Link href={`/dashboard/seller/orders/${order._id}`} className="text-primary hover:text-primary-dark font-medium">
+                                View
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>

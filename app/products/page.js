@@ -237,6 +237,7 @@ export default function ProductsPage() {
                       key={product._id} 
                       product={{
                         ...product,
+                        id: product._id,
                         image: product.images?.[0] || 'https://via.placeholder.com/400',
                         seller: product.sellerId,
                       }} 

@@ -7,20 +7,25 @@
 
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function BuyerOrderDetailsPage({ params }) {
+  // Unwrap the params Promise
+  const unwrappedParams = use(params);
+  const orderId = unwrappedParams.id;
+  
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchOrder();
-  }, [params.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]);
 
   const fetchOrder = async () => {
     try {
-      const response = await fetch(`/api/buyer/orders/${params.id}`);
+      const response = await fetch(`/api/buyer/orders/${orderId}`);
       const data = await response.json();
 
       if (data.success) {

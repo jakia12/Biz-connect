@@ -6,6 +6,7 @@
 'use client';
 
 import Button from '@/components/ui/Button';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -18,6 +19,7 @@ export default function SellerProductsPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, productId: null, productName: '' });
 
   // Fetch products from API
   useEffect(() => {
@@ -53,13 +55,9 @@ export default function SellerProductsPage() {
     }
   };
 
-  const handleDelete = async (productId) => {
-    if (!confirm('Are you sure you want to delete this product?')) {
-      return;
-    }
-
+  const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/seller/products/${productId}`, {
+      const response = await fetch(`/api/seller/products/${deleteModal.productId}`, {
         method: 'DELETE',
       });
 
@@ -227,7 +225,7 @@ export default function SellerProductsPage() {
                           </button>
                         </Link>
                         <button 
-                          onClick={() => handleDelete(product._id)}
+                          onClick={() => setDeleteModal({ isOpen: true, productId: product._id, productName: product.title })}
                           className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -268,6 +266,18 @@ export default function SellerProductsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, productId: null, productName: '' })}
+        onConfirm={handleDelete}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${deleteModal.productName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 }

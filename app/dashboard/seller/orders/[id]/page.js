@@ -7,21 +7,26 @@
 
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function SellerOrderDetailsPage({ params }) {
+  // Unwrap the params Promise
+  const unwrappedParams = use(params);
+  const orderId = unwrappedParams.id;
+  
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetchOrder();
-  }, [params.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]);
 
   const fetchOrder = async () => {
     try {
-      const response = await fetch(`/api/seller/orders/${params.id}`);
+      const response = await fetch(`/api/seller/orders/${orderId}`);
       const data = await response.json();
 
       if (data.success) {
@@ -40,7 +45,7 @@ export default function SellerOrderDetailsPage({ params }) {
   const updateOrderStatus = async (newStatus) => {
     try {
       setUpdating(true);
-      const response = await fetch(`/api/seller/orders/${params.id}`, {
+      const response = await fetch(`/api/seller/orders/${orderId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

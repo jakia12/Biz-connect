@@ -3,7 +3,7 @@
  * Using JWT strategy for session management
  */
 
-import connectDB from '@/backend/shared/config/db';
+import connectDB from '@/backend/shared/config/database';
 import User from '@/backend/shared/models/User';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';

@@ -46,6 +46,46 @@ const UserSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // Seller-specific fields
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    businessName: {
+      type: String,
+      trim: true,
+    },
+    businessCategory: {
+      type: String,
+      trim: true,
+    },
+    businessDescription: {
+      type: String,
+      trim: true,
+    },
+    businessAddress: {
+      type: String,
+      trim: true,
+    },
+    profileImage: {
+      type: String,
+    },
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalOrders: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt

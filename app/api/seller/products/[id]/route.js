@@ -14,6 +14,9 @@ import { getServerSession } from 'next-auth';
  */
 export async function GET(request, { params }) {
   try {
+    // Unwrap the params Promise
+    const { id } = await params;
+    
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'seller') {
       return Response.json(
@@ -25,7 +28,7 @@ export async function GET(request, { params }) {
     await connectDB();
 
     const product = await Product.findOne({
-      _id: params.id,
+      _id: id,
       sellerId: session.user.id,
     }).lean();
 
@@ -55,6 +58,9 @@ export async function GET(request, { params }) {
  */
 export async function PUT(request, { params }) {
   try {
+    // Unwrap the params Promise
+    const { id } = await params;
+    
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'seller') {
       return Response.json(
@@ -69,7 +75,7 @@ export async function PUT(request, { params }) {
 
     // Find product and verify ownership
     const product = await Product.findOne({
-      _id: params.id,
+      _id: id,
       sellerId: session.user.id,
     });
 
@@ -113,6 +119,9 @@ export async function PUT(request, { params }) {
  */
 export async function DELETE(request, { params }) {
   try {
+    // Unwrap the params Promise
+    const { id } = await params;
+    
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'seller') {
       return Response.json(
@@ -125,7 +134,7 @@ export async function DELETE(request, { params }) {
 
     // Find and delete product (verify ownership)
     const product = await Product.findOneAndDelete({
-      _id: params.id,
+      _id: id,
       sellerId: session.user.id,
     });
 

@@ -3,7 +3,7 @@
  * Handles buyer and seller registration
  */
 
-import connectDB from '@/backend/shared/config/db';
+import connectDB from '@/backend/shared/config/database';
 import SellerProfile from '@/backend/shared/models/SellerProfile';
 import User from '@/backend/shared/models/User';
 import { NextResponse } from 'next/server';
