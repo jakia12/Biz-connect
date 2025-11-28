@@ -1,6 +1,6 @@
 /**
- * Navbar Component - BizConnect
- * Premium, Spacious, Fiverr-Inspired Layout
+ * Enhanced Navbar Component with Smart Search
+ * Fiverr-like search with autocomplete suggestions
  */
 
 'use client';
@@ -8,12 +8,17 @@
 import { useCart } from '@/context/CartContext';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import NotificationBell from '../ui/NotificationBell';
 
 export default function Navbar() {
+  const router = useRouter();
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const searchRef = useRef(null);
   const { cart } = useCart();
   const { data: session } = useSession();
 
@@ -35,6 +40,109 @@ export default function Navbar() {
 
   const serviceCategories = categories.filter(cat => cat.type === 'service');
   const productCategories = categories.filter(cat => cat.type === 'product');
+
+  // Popular search keywords
+  const popularKeywords = [
+    { text: "logo design", type: "service", category: "Graphics & Design" },
+    { text: "web development", type: "service", category: "Web Development" },
+    { text: "seo services", type: "service", category: "Digital Marketing" },
+    { text: "content writing", type: "service", category: "Content Writing" },
+    { text: "video editing", type: "service", category: "Video & Animation" },
+    { text: "handmade jewelry", type: "product", category: "Handmade Crafts" },
+    { text: "organic food", type: "product", category: "Food & Beverage" },
+    { text: "fashion clothing", type: "product", category: "Fashion & Apparel" },
+    { text: "electronics gadgets", type: "product", category: "Electronics" },
+    { text: "home decor", type: "product", category: "Home & Living" },
+  ];
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Generate suggestions based on search query
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      const query = searchQuery.toLowerCase();
+      
+      // Filter categories (all types)
+      const categoryMatches = categories
+        .filter(cat => cat.name.toLowerCase().includes(query))
+        .map(cat => ({
+          type: 'category',
+          text: cat.name,
+          icon: cat.icon,
+          itemType: cat.type,
+        }));
+
+      // Filter keywords (all types)
+      const keywordMatches = popularKeywords
+        .filter(kw => kw.text.toLowerCase().includes(query))
+        .map(kw => ({
+          type: 'keyword',
+          text: kw.text,
+          itemType: kw.type,
+          category: kw.category,
+        }));
+
+      // Combine and limit results
+      const combined = [...categoryMatches, ...keywordMatches].slice(0, 8);
+      setSuggestions(combined);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [searchQuery]);
+
+  const handleSearch = (query = searchQuery) => {
+    if (!query.trim()) return;
+
+    const searchParams = new URLSearchParams();
+    searchParams.set('search', query.trim());
+
+    // Default to products page for general search
+    router.push(`/products?${searchParams.toString()}`);
+
+    setShowSuggestions(false);
+    setSearchQuery('');
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    if (suggestion.type === 'category') {
+      // Navigate to category page
+      const categorySlug = suggestion.text.toLowerCase().replace(/ /g, '-');
+      if (suggestion.itemType === 'product') {
+        router.push(`/products?category=${encodeURIComponent(suggestion.text)}`);
+      } else {
+        router.push(`/services?category=${encodeURIComponent(suggestion.text)}`);
+      }
+    } else {
+      // Navigate with search query
+      handleSearch(suggestion.text, suggestion.itemType + 's');
+    }
+    setShowSuggestions(false);
+    setSearchQuery('');
+  };
+
+  const highlightMatch = (text, query) => {
+    if (!query) return text;
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return parts.map((part, index) =>
+      part.toLowerCase() === query.toLowerCase() ? (
+        <strong key={index} className="font-bold text-primary">{part}</strong>
+      ) : (
+        part
+      )
+    );
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 font-body">
@@ -124,8 +232,8 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Search Bar (Wide & Modern) */}
-          <div className="hidden md:flex flex-1 max-w-3xl relative">
+          {/* Search Bar with Autocomplete */}
+          <div className="hidden md:flex flex-1 max-w-3xl relative" ref={searchRef}>
             <div className="flex w-full border border-gray-300 rounded-lg overflow-hidden hover:border-primary transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary h-12 shadow-sm">
               <div className="relative flex-1">
                 <input
@@ -134,19 +242,61 @@ export default function Navbar() {
                   className="w-full h-full px-5 text-sm text-gray-700 outline-none placeholder:text-gray-400"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => searchQuery && setShowSuggestions(true)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
-              <div className="border-l border-gray-200 bg-gray-50 px-4 flex items-center">
-                <select className="bg-transparent text-sm font-medium text-gray-600 outline-none cursor-pointer h-full">
-                  <option>All Categories</option>
-                  <option>Products</option>
-                  <option>Services</option>
-                </select>
-              </div>
-              <button className="bg-primary text-white px-8 hover:bg-primary-dark transition-colors font-bold text-sm">
+              <button 
+                onClick={() => handleSearch()}
+                className="bg-primary text-white px-8 hover:bg-primary-dark transition-colors font-bold text-sm"
+              >
                 Search
               </button>
             </div>
+
+            {/* Autocomplete Suggestions Dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                <div className="p-2">
+                  <p className="text-xs font-semibold text-gray-500 px-3 py-2">Suggestions</p>
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-3 group"
+                    >
+                      {suggestion.type === 'category' ? (
+                        <>
+                          <span className="text-xl">{suggestion.icon}</span>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-900">
+                              {highlightMatch(suggestion.text, searchQuery)}
+                            </p>
+                            <p className="text-xs text-gray-500 capitalize">{suggestion.itemType}</p>
+                          </div>
+                          <svg className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-900">
+                              {highlightMatch(suggestion.text, searchQuery)}
+                            </p>
+                            <p className="text-xs text-gray-500">in {suggestion.category}</p>
+                          </div>
+                          <span className="text-xs text-gray-400 capitalize">{suggestion.itemType}</span>
+                        </>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Icons (Clean) */}
@@ -221,7 +371,7 @@ export default function Navbar() {
                     <ul className="space-y-1">
                       {productCategories.map((cat, idx) => (
                         <li key={idx}>
-                          <Link href={`/products/${cat.name.toLowerCase().replace(/ /g, '-')}`} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-gray-50 rounded transition-colors">
+                          <Link href={`/products?category=${encodeURIComponent(cat.name)}`} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-gray-50 rounded transition-colors">
                             <span className="text-base opacity-80">{cat.icon}</span>
                             {cat.name}
                           </Link>
@@ -241,7 +391,7 @@ export default function Navbar() {
                     <ul className="space-y-1">
                       {serviceCategories.map((cat, idx) => (
                         <li key={idx}>
-                          <Link href={`/services/${cat.name.toLowerCase().replace(/ /g, '-')}`} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-gray-50 rounded transition-colors">
+                          <Link href={`/services?category=${encodeURIComponent(cat.name)}`} className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-gray-50 rounded transition-colors">
                             <span className="text-base opacity-80">{cat.icon}</span>
                             {cat.name}
                           </Link>

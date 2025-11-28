@@ -8,15 +8,18 @@
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { motion } from 'framer-motion';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Zap } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function ProductCard({ product, className = '' }) {
+export default function ProductCard({ product, className = '', type = 'product' }) {
   const {
     id,
+    _id,
     title,
     price,
     originalPrice,
@@ -28,6 +31,9 @@ export default function ProductCard({ product, className = '' }) {
     badge
   } = product;
 
+  const productId = id || _id;
+  const { data: session } = useSession();
+  const router = useRouter();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { addToCart, cart } = useCart();
   const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
@@ -35,16 +41,16 @@ export default function ProductCard({ product, className = '' }) {
   
   // Check if product is already in cart
   const isInCart = cart?.items?.some(item => 
-    item.productId?._id === id || item.productId === id
+    item.productId?._id === productId || item.productId === productId
   );
   
-  const inWishlist = isInWishlist(id);
+  const inWishlist = isInWishlist(productId);
 
   const handleWishlistClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsTogglingWishlist(true);
-    await toggleWishlist(id);
+    await toggleWishlist(productId);
     setIsTogglingWishlist(false);
   };
 
@@ -67,13 +73,30 @@ export default function ProductCard({ product, className = '' }) {
     };
     
     // Add to cart using CartContext
-    const success = await addToCart(id, 1, productData);
+    const success = await addToCart(productId, 1, productData);
     
     setIsAddingToCart(false);
   };
 
+  const handleOrderNow = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!session) {
+      toast.error('Please login to order now');
+      router.push('/login');
+      return;
+    }
+
+    // Redirect to checkout or order page for service
+    // For now, we'll assume a direct checkout route for services
+    router.push(`/checkout?serviceId=${productId}`);
+  };
+
   // Calculate discount if not provided but original price exists
   const discountPercent = discount || (originalPrice ? `-${Math.round(((originalPrice - price) / originalPrice) * 100)}%` : null);
+
+  const isService = type === 'service';
 
   return (
     <motion.div 
@@ -81,7 +104,7 @@ export default function ProductCard({ product, className = '' }) {
       whileHover={{ y: -6, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
       transition={{ duration: 0.2, ease: "easeOut" }}
     >
-      <Link href={`/products/${id}`} className="block">
+      <Link href={`/${isService ? 'services' : 'products'}/${productId}`} className="block">
         {/* Product Image - Square 1:1 */}
         <div className="relative w-full aspect-square bg-gray-100">
           <Image
@@ -151,27 +174,41 @@ export default function ProductCard({ product, className = '' }) {
             <span>{sold ? `${sold} Sold` : `${reviews || 0} Reviews`}</span>
           </div>
 
-          {/* Add to Cart Button */}
-          <motion.button
-            onClick={handleAddToCart}
-            disabled={isInCart || isAddingToCart}
-            className={`mt-3 w-full py-2.5 px-4 rounded-md flex items-center justify-center gap-2 font-medium text-sm transition-all shadow-sm ${
-              isInCart 
-                ? 'bg-green-500 text-white cursor-not-allowed' 
-                : isAddingToCart
-                ? 'bg-gray-400 text-white cursor-wait'
-                : 'bg-primary hover:bg-primary/90 text-white hover:shadow-md'
-            }`}
-            initial={{ opacity: 0, y: 10 }}
-            whileHover={!isInCart && !isAddingToCart ? { scale: 1.02 } : {}}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ShoppingCart className="w-4 h-4" />
-            <span>
-              {isInCart ? 'Added to Cart' : isAddingToCart ? 'Adding...' : 'Add to Cart'}
-            </span>
-          </motion.button>
+          {/* Action Button */}
+          {isService ? (
+            <motion.button
+              onClick={handleOrderNow}
+              className="mt-3 w-full py-2.5 px-4 rounded-md flex items-center justify-center gap-2 font-medium text-sm transition-all shadow-sm bg-primary hover:bg-primary/90 text-white hover:shadow-md"
+              initial={{ opacity: 0, y: 10 }}
+              whileHover={{ scale: 1.02 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Zap className="w-4 h-4" />
+              <span>Order Now</span>
+            </motion.button>
+          ) : (
+            <motion.button
+              onClick={handleAddToCart}
+              disabled={isInCart || isAddingToCart}
+              className={`mt-3 w-full py-2.5 px-4 rounded-md flex items-center justify-center gap-2 font-medium text-sm transition-all shadow-sm ${
+                isInCart 
+                  ? 'bg-green-500 text-white cursor-not-allowed' 
+                  : isAddingToCart
+                  ? 'bg-gray-400 text-white cursor-wait'
+                  : 'bg-primary hover:bg-primary/90 text-white hover:shadow-md'
+              }`}
+              initial={{ opacity: 0, y: 10 }}
+              whileHover={!isInCart && !isAddingToCart ? { scale: 1.02 } : {}}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span>
+                {isInCart ? 'Added to Cart' : isAddingToCart ? 'Adding...' : 'Add to Cart'}
+              </span>
+            </motion.button>
+          )}
         </div>
       </Link>
     </motion.div>

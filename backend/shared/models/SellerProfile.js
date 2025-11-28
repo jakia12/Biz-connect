@@ -81,6 +81,24 @@ const SellerProfileSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    // Verification fields
+    verificationStatus: {
+      type: String,
+      enum: ['idle', 'pending', 'approved', 'rejected'],
+      default: 'idle',
+    },
+    verificationDocuments: {
+      type: [String],
+      default: [],
+    },
+    verificationMessage: {
+      type: String,
+      default: '',
+    },
+    rejectionReason: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: true,

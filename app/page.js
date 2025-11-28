@@ -7,6 +7,8 @@
 
 import HeroSlider from '@/components/home/HeroSlider';
 import StatsSection from '@/components/home/StatsSection';
+import TopProductSellers from '@/components/home/TopProductSellers';
+import TopServiceSellers from '@/components/home/TopServiceSellers';
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
 import ProductCard from '@/components/product/ProductCard';
@@ -17,42 +19,55 @@ import {
     ArrowRight,
     Award,
     Briefcase,
-    CheckCircle2,
     Package,
     ShieldCheck,
     ShoppingBag,
     Sparkles,
-    Star,
-    TrendingUp,
-    Zap
+    TrendingUp
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function HomePage() {
-  const [sellers, setSellers] = useState([]);
-  const [sellersLoading, setSellersLoading] = useState(true);
+  const [featuredServices, setFeaturedServices] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [verifiedSellers, setVerifiedSellers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSellers();
+    const fetchData = async () => {
+      try {
+        // Fetch featured services
+        const servicesRes = await fetch('/api/services?limit=4&sort=rating');
+        const servicesData = await servicesRes.json();
+        if (servicesData.success) {
+          setFeaturedServices(servicesData.services);
+        }
+
+        // Fetch featured products
+        const productsRes = await fetch('/api/products?limit=4&sort=rating');
+        const productsData = await productsRes.json();
+        if (productsData.success) {
+          setFeaturedProducts(productsData.products);
+        }
+
+        // Fetch verified sellers
+        const sellersRes = await fetch('/api/sellers?limit=4&isVerified=true');
+        const sellersData = await sellersRes.json();
+        if (sellersData.success) {
+          setVerifiedSellers(sellersData.sellers);
+        }
+      } catch (error) {
+        console.error('Error fetching home data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const fetchSellers = async () => {
-    try {
-      setSellersLoading(true);
-      const response = await fetch('/api/sellers?limit=4');
-      const data = await response.json();
-      
-      if (data.success) {
-        setSellers(data.sellers);
-      }
-    } catch (error) {
-      console.error('Error fetching sellers:', error);
-    } finally {
-      setSellersLoading(false);
-    }
-  };
   const serviceCategories = [
     { 
       name: "Graphics & Design", 
@@ -106,131 +121,6 @@ export default function HomePage() {
       name: "Electronics", 
       image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=300&fit=crop",
       count: "380+"
-    },
-  ];
-
-  const featuredServices = [
-    {
-      id: 1,
-      title: "Professional Business Logo Design",
-      price: 1500,
-      image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&h=400&fit=crop",
-      rating: 4.9,
-      reviews: 120,
-      seller: { name: "Creative Studio BD", verified: true }
-    },
-    {
-      id: 2,
-      title: "E-commerce Website Development",
-      price: 25000,
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
-      rating: 5.0,
-      reviews: 45,
-      seller: { name: "Tech Pro BD", verified: true }
-    },
-    {
-      id: 3,
-      title: "Digital Marketing Package",
-      price: 8000,
-      image: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=600&h=400&fit=crop",
-      rating: 4.8,
-      reviews: 89,
-      seller: { name: "Marketing Experts", verified: true }
-    },
-    {
-      id: 4,
-      title: "Content Writing Services",
-      price: 500,
-      image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&h=400&fit=crop",
-      rating: 4.7,
-      reviews: 156,
-      seller: { name: "Writers Hub", verified: true }
-    },
-  ];
-
-  const featuredProducts = [
-    {
-      id: 5,
-      title: "Premium Cotton T-Shirts (Bulk)",
-      price: 15000,
-      originalPrice: 20000,
-      discount: "-25%",
-      image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=400&fit=crop",
-      rating: 4.7,
-      reviews: 56,
-      seller: { name: "Garments Direct", verified: true }
-    },
-    {
-      id: 6,
-      title: "Organic Honey 1kg (Wholesale)",
-      price: 800,
-      originalPrice: 1000,
-      discount: "-20%",
-      image: "https://images.unsplash.com/photo-1587049352846-4a222e784720?w=600&h=400&fit=crop",
-      rating: 4.9,
-      reviews: 112,
-      seller: { name: "Sundarban Mart", verified: true }
-    },
-    {
-      id: 7,
-      title: "Handmade Jute Bags (Pack of 50)",
-      price: 2500,
-      image: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=600&h=400&fit=crop",
-      rating: 4.8,
-      reviews: 78,
-      seller: { name: "Eco Crafts BD", verified: true }
-    },
-    {
-      id: 8,
-      title: "Fresh Vegetables Box (5kg)",
-      price: 350,
-      image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&h=400&fit=crop",
-      rating: 4.6,
-      reviews: 234,
-      seller: { name: "Farm Fresh BD", verified: true }
-    },
-  ];
-
-  const verifiedSellers = [
-    {
-      id: 1,
-      name: 'Creative Studio BD',
-      category: 'Graphics & Design',
-      rating: 4.9,
-      reviews: 245,
-      orders: 1200,
-      image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=300&h=300&fit=crop',
-      verified: true
-    },
-    {
-      id: 2,
-      name: 'Tech Pro BD',
-      category: 'Web Development',
-      rating: 5.0,
-      reviews: 189,
-      orders: 850,
-      image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=300&h=300&fit=crop',
-      verified: true
-    },
-    {
-      id: 3,
-      name: 'Garments Direct',
-      category: 'Fashion & Apparel',
-      rating: 4.8,
-      reviews: 567,
-      orders: 2100,
-      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=300&fit=crop',
-      verified: true
-    },
-    {
-      id: 4,
-      name: 'Eco Crafts BD',
-      category: 'Handmade Crafts',
-      rating: 4.9,
-      reviews: 423,
-      orders: 1500,
-      image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=300&h=300&fit=crop',
-      verified: true
     },
   ];
 
@@ -355,7 +245,7 @@ export default function HomePage() {
               whileHover={{ scale: 1.05, y: -5 }}
               transition={{ duration: 0.2 }}
             >
-              <Link href={`/services/${cat.name.toLowerCase().replace(/ /g, '-')}`} className="group block">
+              <Link href={`/services?category=${encodeURIComponent(cat.name)}`} className="group block">
                 <div className="relative h-40 rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-2xl transition-all">
                   <Image 
                     src={cat.image} 
@@ -381,11 +271,22 @@ export default function HomePage() {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
           variants={staggerContainer}
         >
-          {featuredServices.map((service) => (
-            <motion.div key={service.id} variants={fadeInUp}>
-              <ProductCard product={service} />
-            </motion.div>
-          ))}
+          {loading ? (
+            // Skeleton loading
+            [1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-gray-100 rounded-lg h-80 animate-pulse"></div>
+            ))
+          ) : featuredServices.length > 0 ? (
+            featuredServices.map((service) => (
+              <motion.div key={service._id} variants={fadeInUp}>
+                <ProductCard product={service} type="service" />
+              </motion.div>
+            ))
+          ) : (
+            <div className="col-span-4 text-center py-10 text-gray-500">
+              No services found.
+            </div>
+          )}
         </motion.div>
       </motion.div>
 
@@ -428,7 +329,7 @@ export default function HomePage() {
                 whileHover={{ scale: 1.05, y: -5 }}
                 transition={{ duration: 0.2 }}
               >
-                <Link href={`/products/${cat.name.toLowerCase().replace(/ /g, '-')}`} className="group block">
+                <Link href={`/products?category=${encodeURIComponent(cat.name)}`} className="group block">
                   <div className="relative h-48 rounded-2xl overflow-hidden mb-4 shadow-lg group-hover:shadow-2xl transition-all">
                     <Image 
                       src={cat.image} 
@@ -454,113 +355,31 @@ export default function HomePage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
             variants={staggerContainer}
           >
-            {featuredProducts.map((product) => (
-              <motion.div key={product.id} variants={fadeInUp}>
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
+            {loading ? (
+              // Skeleton loading
+              [1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-gray-100 rounded-lg h-80 animate-pulse"></div>
+              ))
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <motion.div key={product._id} variants={fadeInUp}>
+                  <ProductCard product={product} />
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-4 text-center py-10 text-gray-500">
+                No products found.
+              </div>
+            )}
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Top Verified Sellers */}
-      <motion.section 
-        className="py-20 bg-white"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={staggerContainer}
-      >
-        <div className="container mx-auto px-6">
-          <motion.div 
-            className="flex items-center justify-between mb-12"
-            variants={fadeInUp}
-          >
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <ShieldCheck className="w-8 h-8 text-primary" />
-                <h2 className="text-4xl font-bold text-gray-900 font-heading">Top Verified Sellers</h2>
-              </div>
-              <p className="text-gray-600 text-lg">Shop with confidence from trusted businesses</p>
-            </div>
-            <Link href="/verified-sellers">
-              <Button variant="outline" className="flex items-center gap-2">
-                View All Sellers
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </motion.div>
+      {/* Top Service Providers */}
+      <TopServiceSellers />
 
-          {sellersLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 animate-pulse">
-                  <div className="h-48 bg-gray-200"></div>
-                  <div className="p-6">
-                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-                    <div className="flex gap-2 mb-3">
-                      <div className="h-4 bg-gray-200 rounded w-8"></div>
-                      <div className="h-4 bg-gray-200 rounded w-16"></div>
-                    </div>
-                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : sellers.length > 0 ? (
-            <motion.div 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-              variants={staggerContainer}
-            >
-              {sellers.map((seller) => (
-                <motion.div 
-                  key={seller._id}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all border border-gray-100"
-                  variants={fadeInUp}
-                  whileHover={{ y: -8 }}
-                >
-                  <Link href={`/seller/${seller._id}`}>
-                    <div className="relative h-48">
-                      <Image 
-                        src={seller.profileImage || 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=300&h=300&fit=crop'}
-                        alt={seller.businessName || seller.name}
-                        fill
-                        className="object-cover"
-                      />
-                      {seller.isVerified && (
-                        <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Verified
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">{seller.businessName || seller.name}</h3>
-                      <p className="text-sm text-gray-600 mb-4">{seller.businessCategory || 'General Seller'}</p>
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                          <span className="font-bold text-gray-900">{seller.rating?.toFixed(1) || '0.0'}</span>
-                        </div>
-                        <span className="text-gray-500 text-sm">({seller.reviewCount || 0} reviews)</span>
-                      </div>
-                      <p className="text-sm text-gray-600 flex items-center gap-1">
-                        <Zap className="w-4 h-4 text-primary" />
-                        {seller.totalOrders || 0} orders completed
-                      </p>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No verified sellers found at the moment.</p>
-            </div>
-          )}
-        </div>
-      </motion.section>
+      {/* Top Product Suppliers */}
+      <TopProductSellers />
 
       {/* Stats */}
       <StatsSection />

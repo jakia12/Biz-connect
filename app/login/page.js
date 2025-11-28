@@ -49,7 +49,9 @@ export default function LoginPage() {
         const session = await response.json();
 
         // Redirect based on role
-        if (session?.user?.role === 'seller') {
+        if (session?.user?.role === 'admin') {
+          router.push('/dashboard/admin');
+        } else if (session?.user?.role === 'seller') {
           router.push('/dashboard/seller');
         } else {
           router.push('/dashboard/buyer');

@@ -4,29 +4,64 @@ import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
 import Button from '@/components/ui/Button';
 import { useCart } from '@/context/CartContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const serviceId = searchParams.get('serviceId');
   const { cart, clearCart } = useCart();
+  
   const [loading, setLoading] = useState(false);
+  const [service, setService] = useState(null);
+  const [selectedPackage, setSelectedPackage] = useState(null);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
     address: '',
     city: '',
     postalCode: '',
-    paymentMethod: 'cod', // Cash on Delivery default
+    paymentMethod: 'cod',
   });
 
+  // Fetch service if serviceId is present
   useEffect(() => {
-    if (cart && cart.items.length === 0) {
+    if (serviceId) {
+      fetchService();
+    }
+  }, [serviceId]);
+
+  const fetchService = async () => {
+    try {
+      const response = await fetch(`/api/services/${serviceId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setService(data.service);
+        // Auto-select basic package
+        if (data.service.packages && data.service.packages.length > 0) {
+          setSelectedPackage(data.service.packages[0]);
+        }
+      } else {
+        toast.error('Service not found');
+        router.push('/services');
+      }
+    } catch (error) {
+      console.error('Error fetching service:', error);
+      toast.error('Failed to load service');
+      router.push('/services');
+    }
+  };
+
+  // Redirect if cart is empty AND no serviceId
+  useEffect(() => {
+    if (!serviceId && cart && cart.items.length === 0) {
       toast.error('Your cart is empty');
       router.push('/products');
     }
-  }, [cart, router]);
+  }, [cart, router, serviceId]);
 
   // Fetch user profile to auto-fill shipping address
   useEffect(() => {
@@ -61,7 +96,50 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      // Filter out items with null productId before submitting
+      // Validate form data
+      const requiredFields = ['fullName', 'phone', 'address', 'city', 'postalCode'];
+      const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
+      
+      if (missingFields.length > 0) {
+        toast.error('Please fill in all required shipping fields');
+        setLoading(false);
+        return;
+      }
+
+      const shippingAddress = {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        addressLine1: formData.address,
+        city: formData.city,
+        postalCode: formData.postalCode,
+      };
+
+      // Handle SERVICE order
+      if (serviceId && service && selectedPackage) {
+        const response = await fetch('/api/service-orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            serviceId: service._id,
+            packageId: selectedPackage._id,
+            shippingAddress,
+            paymentMethod: formData.paymentMethod,
+            requirements: {} // Can be extended later
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          toast.success('Service order placed successfully!');
+          router.push(`/dashboard/buyer/orders`);
+        } else {
+          toast.error(data.error || 'Failed to place service order');
+        }
+        return;
+      }
+
+      // Handle PRODUCT order (existing logic)
       const validItems = cart.items.filter(item => item.productId && item.productId._id);
       
       if (validItems.length === 0) {
@@ -74,35 +152,18 @@ export default function CheckoutPage() {
         toast.error('Some items are no longer available and will be skipped');
       }
 
-      // Validate form data manually to ensure no empty fields
-      const requiredFields = ['fullName', 'phone', 'address', 'city', 'postalCode'];
-      const missingFields = requiredFields.filter(field => !formData[field] || formData[field].trim() === '');
-      
-      if (missingFields.length > 0) {
-        toast.error('Please fill in all required shipping fields');
-        setLoading(false);
-        return;
-      }
-
-      // Create order API call
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          shippingAddress: {
-            fullName: formData.fullName,
-            phone: formData.phone,
-            addressLine1: formData.address,
-            city: formData.city,
-            postalCode: formData.postalCode,
-          },
+          shippingAddress,
           paymentMethod: formData.paymentMethod,
           items: validItems.map(item => ({
             productId: item.productId._id,
             quantity: item.quantity,
             price: item.price
           })),
-          totalAmount: cart.total + 50 + (cart.total * 0.05) // Total + Shipping + Tax
+          totalAmount: cart.total + 50 + (cart.total * 0.05)
         }),
       });
 
@@ -146,11 +207,14 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!cart || cart.items.length === 0) {
-    return null; // Redirecting in useEffect
+  // Don't show anything while redirecting
+  if (!serviceId && (!cart || cart.items.length === 0)) {
+    return null;
   }
 
-  const subtotal = cart.total || 0;
+  // Calculate totals based on order type
+  const isServiceOrder = serviceId && service && selectedPackage;
+  const subtotal = isServiceOrder ? selectedPackage.price : (cart?.total || 0);
   const shipping = 50;
   const tax = subtotal * 0.05;
   const total = subtotal + shipping + tax;
@@ -272,21 +336,55 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-bold mb-6 text-gray-900">Order Summary</h2>
                 
                 <div className="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                  {cart.items.map((item) => {
-                    // Skip items with null productId
-                    if (!item.productId) return null;
-                    
-                    return (
-                      <div key={item.productId._id} className="flex gap-4 text-sm">
-                        <div className="font-medium text-gray-900 flex-1">
-                          {item.quantity} x {item.productId?.title || 'Unknown Product'}
-                        </div>
-                        <div className="text-gray-600">
-                          ৳{(item.price * item.quantity).toLocaleString()}
-                        </div>
+                  {isServiceOrder ? (
+                    // Service Order Summary
+                    <div className="border-b border-gray-100 pb-4">
+                      <div className="font-medium text-gray-900 mb-2">{service.title}</div>
+                      <div className="text-sm text-gray-600 mb-3">{service.category}</div>
+                      
+                      {/* Package Selection */}
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-gray-700">Select Package:</p>
+                        {service.packages.map((pkg) => (
+                          <button
+                            key={pkg._id}
+                            onClick={() => setSelectedPackage(pkg)}
+                            className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                              selectedPackage?._id === pkg._id
+                                ? 'border-primary bg-primary/5'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-gray-900">{pkg.name}</p>
+                                <p className="text-xs text-gray-600 mt-1">
+                                  {pkg.deliveryTime} • {pkg.revisions} revisions
+                                </p>
+                              </div>
+                              <p className="font-bold text-primary">৳{pkg.price}</p>
+                            </div>
+                          </button>
+                        ))}
                       </div>
-                    );
-                  })}
+                    </div>
+                  ) : (
+                    // Product Order Summary
+                    cart?.items.map((item) => {
+                      if (!item.productId) return null;
+                      
+                      return (
+                        <div key={item.productId._id} className="flex gap-4 text-sm">
+                          <div className="font-medium text-gray-900 flex-1">
+                            {item.quantity} x {item.productId?.title || 'Unknown Product'}
+                          </div>
+                          <div className="text-gray-600">
+                            ৳{(item.price * item.quantity).toLocaleString()}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
 
                 <div className="border-t border-gray-100 pt-4 space-y-3">

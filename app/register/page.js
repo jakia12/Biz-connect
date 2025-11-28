@@ -9,8 +9,8 @@
 import Button from '@/components/ui/Button';
 import FormField from '@/components/ui/FormField';
 import {
-  buyerRegistrationSchema,
-  sellerRegistrationSchema
+    buyerRegistrationSchema,
+    sellerRegistrationSchema
 } from '@/lib/validation-schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, Upload } from 'lucide-react';
@@ -62,20 +62,37 @@ export default function RegisterPage() {
     { number: 3, title: 'Description', subtitle: 'Step 3 of 3', fields: ['description', 'businessHoursFrom', 'businessHoursTo'] }
   ];
 
-  const categories = [
+  const productCategories = [
     'Food & Beverage',
     'Fashion & Apparel',
-    'Electronics & Gadgets',
+    'Handmade Crafts',
+    'Electronics',
     'Home & Living',
-    'Beauty & Personal Care',
-    'Sports & Outdoors',
-    'Books & Stationery',
+    'Beauty & Care',
+    'Agriculture'
+  ];
+
+  const serviceCategories = [
     'Graphics & Design',
     'Digital Marketing',
     'Web Development',
-    'Writing & Translation',
-    'Video & Animation'
+    'Content Writing',
+    'Video & Animation',
+    'Business Consulting'
   ];
+
+  // Get categories based on business type
+  const getCategories = () => {
+    const businessType = sellerValues.businessType;
+    if (businessType === 'product') {
+      return productCategories;
+    } else if (businessType === 'service') {
+      return serviceCategories;
+    } else if (businessType === 'both') {
+      return [...productCategories, ...serviceCategories];
+    }
+    return [];
+  };
 
   const locations = [
     'Dhaka',
@@ -480,6 +497,11 @@ export default function RegisterPage() {
                             value={type}
                             className="sr-only"
                             {...registerSeller('businessType')}
+                            onChange={(e) => {
+                              registerSeller('businessType').onChange(e);
+                              // Reset category when business type changes
+                              setSellerValue('category', '');
+                            }}
                           />
                           <span className={`text-sm font-medium capitalize ${
                             sellerValues.businessType === type ? 'text-primary' : 'text-gray-700'
@@ -505,11 +527,18 @@ export default function RegisterPage() {
                     type="select"
                     options={[
                       { value: '', label: 'Select category' },
-                      ...categories.map(cat => ({ value: cat, label: cat }))
+                      ...getCategories().map(cat => ({ value: cat, label: cat }))
                     ]}
                     register={registerSeller}
                     error={sellerErrors.category}
                     required
+                    helperText={
+                      sellerValues.businessType === 'product' 
+                        ? 'Product categories' 
+                        : sellerValues.businessType === 'service'
+                        ? 'Service categories'
+                        : 'All categories'
+                    }
                   />
 
                   <div className="grid grid-cols-2 gap-4">

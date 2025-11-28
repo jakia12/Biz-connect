@@ -93,6 +93,7 @@ export async function POST(request) {
         phone,
         password,
         role: 'seller',
+        businessType: businessType || 'product', // Add businessType
       });
 
       console.log('[Registration] Creating seller profile for user:', user._id);

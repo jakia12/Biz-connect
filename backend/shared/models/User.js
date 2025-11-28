@@ -63,6 +63,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    businessType: {
+      type: String,
+      enum: ['product', 'service', 'both'],
+      default: 'product',
+    },
     businessAddress: {
       type: String,
       trim: true,

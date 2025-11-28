@@ -10,87 +10,94 @@ import Navbar from '@/components/layout/Navbar';
 import ProductCard from '@/components/product/ProductCard';
 import { fadeInUp, staggerContainer } from '@/utils/animations';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function ServicesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [viewMode, setViewMode] = useState('grid');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [priceRange, setPriceRange] = useState([0, 50000]);
   const [sortBy, setSortBy] = useState('recommended');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const categories = [
-    { id: 'all', name: 'All Services', icon: '🎯', count: 1250 },
-    { id: 'design', name: 'Graphics & Design', icon: '🎨', count: 450 },
-    { id: 'development', name: 'Web Development', icon: '💻', count: 320 },
-    { id: 'marketing', name: 'Digital Marketing', icon: '📢', count: 280 },
-    { id: 'writing', name: 'Content Writing', icon: '✍️', count: 200 },
-  ];
+  // Fetch services on mount and when filters change
+  useEffect(() => {
+    fetchServices();
+  }, [selectedCategory, currentPage, sortBy, searchQuery]);
 
-  const services = [
-    {
-      id: 1,
-      title: "Professional Business Logo Design",
-      price: 1500,
-      image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&h=400&fit=crop",
-      rating: 4.9,
-      reviews: 120,
-      seller: { name: "Creative Studio BD", verified: true, level: "Top Rated" },
-      badge: { text: "Best Seller", variant: "success" },
-      deliveryTime: "2 days"
-    },
-    {
-      id: 2,
-      title: "E-commerce Website Development",
-      price: 25000,
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
-      rating: 5.0,
-      reviews: 45,
-      seller: { name: "Tech Pro BD", verified: true, level: "Top Rated" },
-      badge: { text: "Featured", variant: "info" },
-      deliveryTime: "7 days"
-    },
-    {
-      id: 3,
-      title: "Digital Marketing Package - SEO & Social Media",
-      price: 8000,
-      image: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=600&h=400&fit=crop",
-      rating: 4.8,
-      reviews: 89,
-      seller: { name: "Marketing Experts", verified: true, level: "Level 2" },
-      deliveryTime: "3 days"
-    },
-    {
-      id: 4,
-      title: "Professional Content Writing - 1000 Words",
-      price: 500,
-      image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&h=400&fit=crop",
-      rating: 4.7,
-      reviews: 156,
-      seller: { name: "Writers Hub", verified: true, level: "Level 1" },
-      deliveryTime: "1 day"
-    },
-    {
-      id: 5,
-      title: "Mobile App UI/UX Design",
-      price: 12000,
-      image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop",
-      rating: 4.9,
-      reviews: 78,
-      seller: { name: "Design Masters", verified: true, level: "Top Rated" },
-      badge: { text: "New", variant: "warning" },
-      deliveryTime: "5 days"
-    },
-    {
-      id: 6,
-      title: "Video Editing & Animation Services",
-      price: 3500,
-      image: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600&h=400&fit=crop",
-      rating: 4.8,
-      reviews: 92,
-      seller: { name: "Video Pro BD", verified: true, level: "Level 2" },
-      deliveryTime: "4 days"
-    },
-  ];
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '12',
+        sort: sortBy === 'price-low' ? 'price' : sortBy === 'price-high' ? 'price' : 'rating',
+        order: sortBy === 'price-low' ? 'asc' : 'desc'
+      });
+
+      if (selectedCategory && selectedCategory !== 'all') {
+        params.append('category', selectedCategory);
+      }
+
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+
+      const response = await fetch(`/api/services?${params}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setServices(data.services);
+        setCategories(['all', ...data.categories]);
+        setPagination(data.pagination);
+      } else {
+        toast.error('Failed to fetch services');
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      toast.error('Failed to fetch services');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchServices();
+  };
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage(1);
+    // Update URL without reload
+    const params = new URLSearchParams(searchParams);
+    if (category === 'all') {
+      params.delete('category');
+    } else {
+      params.set('category', category);
+    }
+    router.push(`/services?${params.toString()}`, { scroll: false });
+  };
+
+  const categoryIcons = {
+    'Graphics & Design': '🎨',
+    'Web Development': '💻',
+    'Digital Marketing': '📢',
+    'Content Writing': '✍️',
+    'Video & Animation': '🎬',
+    'Business Consulting': '💼',
+    'all': '🎯'
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-body">
@@ -122,8 +129,14 @@ export default function ServicesPage() {
                 type="text" 
                 placeholder="Search for any service..."
                 className="flex-1 px-6 py-4 text-gray-900 outline-none text-lg"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
-              <button className="bg-primary text-white px-8 py-4 rounded-xl font-bold hover:bg-primary-dark transition-colors">
+              <button 
+                onClick={handleSearch}
+                className="bg-primary text-white px-8 py-4 rounded-xl font-bold hover:bg-primary-dark transition-colors"
+              >
                 Search
               </button>
             </div>
@@ -142,17 +155,16 @@ export default function ServicesPage() {
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map((cat) => (
               <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
+                key={cat}
+                onClick={() => handleCategoryChange(cat)}
                 className={`flex items-center gap-2 px-6 py-3 rounded-full whitespace-nowrap font-medium transition-all ${
-                  selectedCategory === cat.id
+                  selectedCategory === cat
                     ? 'bg-primary text-white shadow-lg scale-105'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                <span className="text-xl">{cat.icon}</span>
-                <span>{cat.name}</span>
-                <span className="text-xs opacity-75">({cat.count})</span>
+                <span className="text-xl">{categoryIcons[cat] || '✨'}</span>
+                <span className="capitalize">{cat === 'all' ? 'All Services' : cat}</span>
               </button>
             ))}
           </div>
@@ -244,7 +256,7 @@ export default function ServicesPage() {
             {/* Toolbar */}
             <div className="flex items-center justify-between mb-6">
               <p className="text-gray-600">
-                <span className="font-bold text-gray-900">{services.length}</span> services available
+                <span className="font-bold text-gray-900">{pagination?.totalServices || 0}</span> services available
               </p>
               <div className="flex items-center gap-4">
                 {/* Sort */}
@@ -284,26 +296,60 @@ export default function ServicesPage() {
 
             {/* Services Grid/List */}
             <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-              {services.map((service) => (
-                <motion.div key={service.id} variants={fadeInUp}>
-                  <ProductCard product={service} />
-                </motion.div>
-              ))}
+              {loading ? (
+                // Skeleton loading
+                [1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-gray-100 rounded-lg h-80 animate-pulse"></div>
+                ))
+              ) : services.length > 0 ? (
+                services.map((service) => (
+                  <motion.div key={service._id} variants={fadeInUp}>
+                    <ProductCard product={service} type="service" />
+                  </motion.div>
+                ))
+              ) : (
+                <div className="col-span-3 text-center py-10">
+                  <div className="text-gray-400 mb-4 text-6xl">🔍</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">No services found</h3>
+                  <p className="text-gray-600">Try adjusting your search or filters</p>
+                </div>
+              )}
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-center gap-2 mt-12">
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Previous</button>
-              {[1, 2, 3, 4, 5].map((page) => (
+            {pagination && pagination.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-12">
                 <button 
-                  key={page}
-                  className={`px-4 py-2 rounded-lg ${page === 1 ? 'bg-primary text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
                 >
-                  {page}
+                  Previous
                 </button>
-              ))}
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Next</button>
-            </div>
+                
+                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                  <button 
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-lg ${
+                      currentPage === page 
+                        ? 'bg-primary text-white' 
+                        : 'border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                  disabled={currentPage === pagination.totalPages}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

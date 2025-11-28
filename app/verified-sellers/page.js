@@ -10,9 +10,13 @@ import Navbar from '@/components/layout/Navbar';
 import Button from '@/components/ui/Button';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function VerifiedSellersPage() {
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get('type'); // 'service' or 'product'
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sellers, setSellers] = useState([]);
@@ -23,7 +27,7 @@ export default function VerifiedSellersPage() {
 
   useEffect(() => {
     fetchSellers();
-  }, [selectedCategory, currentPage]);
+  }, [selectedCategory, currentPage, typeParam]);
 
   const fetchSellers = async () => {
     try {
@@ -39,6 +43,11 @@ export default function VerifiedSellersPage() {
 
       if (searchQuery) {
         params.append('search', searchQuery);
+      }
+
+      // Add type filter if present
+      if (typeParam) {
+        params.append('type', typeParam);
       }
 
       const response = await fetch(`/api/sellers?${params}`);
@@ -73,9 +82,15 @@ export default function VerifiedSellersPage() {
         <div className="bg-primary text-white py-16 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="container mx-auto px-6 relative z-10 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4">Verified Sellers</h1>
+            <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4">
+              {typeParam === 'service' ? 'Top Service Providers' : typeParam === 'product' ? 'Top Product Suppliers' : 'Verified Sellers'}
+            </h1>
             <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8">
-              Connect with our most trusted and top-rated business partners. Quality and reliability guaranteed.
+              {typeParam === 'service' 
+                ? 'Hire expert freelancers for your business needs. Quality and reliability guaranteed.' 
+                : typeParam === 'product'
+                ? 'Quality wholesale products from trusted suppliers. Best prices guaranteed.'
+                : 'Connect with our most trusted and top-rated business partners. Quality and reliability guaranteed.'}
             </p>
             
             {/* Search Bar */}

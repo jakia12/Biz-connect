@@ -4,6 +4,7 @@
  */
 
 import connectDB from '@/backend/shared/config/database';
+import SellerProfile from '@/backend/shared/models/SellerProfile';
 import User from '@/backend/shared/models/User';
 
 /**
@@ -18,14 +19,31 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const category = searchParams.get('category');
+    const type = searchParams.get('type'); // 'service' or 'product'
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
     const skip = (page - 1) * limit;
 
-    // Build query - fetch all sellers (verification filter removed for now)
+    // If type filter is specified, query SellerProfile first
+    let sellerUserIds = null;
+    if (type) {
+      const sellerProfiles = await SellerProfile.find({
+        businessType: { $in: [type, 'both'] } // Include sellers who do both
+      }).select('userId').lean();
+      
+      sellerUserIds = sellerProfiles.map(profile => profile.userId);
+    }
+
+    // Build query - fetch sellers
     const query = { 
-      role: 'seller'
+      role: 'seller',
+      isVerified: true
     };
+
+    // Add type filter if specified
+    if (sellerUserIds) {
+      query._id = { $in: sellerUserIds };
+    }
 
     // Add search filter
     if (search) {

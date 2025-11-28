@@ -52,6 +52,7 @@ export const authOptions = {
             role: user.role,
             phone: user.phone,
             image: user.image,
+            businessType: user.businessType,
           };
         } catch (error) {
           console.error('[NextAuth] Authorization error:', error.message);
@@ -81,6 +82,7 @@ export const authOptions = {
         token.role = user.role;
         token.phone = user.phone;
         token.image = user.image;
+        token.businessType = user.businessType;
       }
       return token;
     },
@@ -93,6 +95,7 @@ export const authOptions = {
         session.user.role = token.role;
         session.user.phone = token.phone;
         session.user.image = token.image;
+        session.user.businessType = token.businessType;
       }
       return session;
     },

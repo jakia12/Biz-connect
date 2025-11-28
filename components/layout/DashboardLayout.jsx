@@ -68,7 +68,12 @@ export default function DashboardLayout({ children, role = 'buyer' }) {
       icon: '📦', 
       label: 'My Products', 
       href: '/dashboard/seller/products',
-      path: '/dashboard/seller/products'
+      path: '/dashboard/seller/products'    },
+    { 
+      icon: '💼', 
+      label: 'My Services', 
+      href: '/dashboard/seller/services',
+      path: '/dashboard/seller/services'
     },
     { 
       icon: '🛒', 
