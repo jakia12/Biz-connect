@@ -11,9 +11,9 @@ import Button from '@/components/ui/Button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
-export default function VerifiedSellersPage() {
+function VerifiedSellersContent() {
   const searchParams = useSearchParams();
   const typeParam = searchParams.get('type'); // 'service' or 'product'
   
@@ -272,5 +272,46 @@ export default function VerifiedSellersPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function VerifiedSellersLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Navbar />
+      <main className="flex-grow">
+        <div className="bg-primary text-white py-16">
+          <div className="container mx-auto px-6 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4">Verified Sellers</h1>
+            <p className="text-xl text-white/90">Loading sellers...</p>
+          </div>
+        </div>
+        <div className="container mx-auto px-6 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-200 animate-pulse">
+                <div className="h-32 bg-gray-200"></div>
+                <div className="p-6">
+                  <div className="bg-gray-200 h-20 w-20 rounded-xl -mt-16 mb-4"></div>
+                  <div className="bg-gray-200 h-4 rounded mb-2"></div>
+                  <div className="bg-gray-200 h-4 rounded w-2/3"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// Wrap with Suspense to handle useSearchParams
+export default function VerifiedSellersPage() {
+  return (
+    <Suspense fallback={<VerifiedSellersLoading />}>
+      <VerifiedSellersContent />
+    </Suspense>
   );
 }

@@ -6,10 +6,10 @@ import Button from '@/components/ui/Button';
 import { useClearCartMutation, useGetCartQuery } from '@/lib/redux/features/cartApi';
 import { useCreateOrderMutation } from '@/lib/redux/features/ordersApi';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const serviceId = searchParams.get('serviceId');
@@ -401,5 +401,51 @@ export default function CheckoutPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function CheckoutLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 font-body">
+      <Navbar />
+      <div className="py-12">
+        <div className="container mx-auto px-6">
+          <h1 className="text-3xl font-bold mb-8 text-gray-900">Checkout</h1>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+                <div className="space-y-4">
+                  <div className="h-12 bg-gray-200 rounded"></div>
+                  <div className="h-12 bg-gray-200 rounded"></div>
+                  <div className="h-24 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100 animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-1/2 mb-6"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Wrap with Suspense to handle useSearchParams
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<CheckoutLoading />}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

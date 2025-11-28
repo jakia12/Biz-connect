@@ -1,0 +1,145 @@
+
+> biz-connect@0.1.0 build
+> next build
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ÔÜá `images.domains` is deprecated in favor of `images.remotePatterns`. Please update next.config.mjs to protect your application from malicious users.
+   Ôû▓ Next.js 16.0.4 (Turbopack)
+   - Environments: .env
+
+ ÔÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ Ô£ô Compiled successfully in 7.8s
+   Running TypeScript ...
+   Collecting page data using 11 workers ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 11 workers (0/81) ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 11 workers (20/81) 
+   Generating static pages using 11 workers (40/81) 
+   Generating static pages using 11 workers (60/81) 
+ Ô£ô Generating static pages using 11 workers (81/81) in 2.7s
+   Finalizing page optimization ...
+
+Route (app)
+Ôöî Ôùï /
+Ôö£ Ôùï /_not-found
+Ôö£ Ôùï /about
+Ôö£ Ôùï /affiliate
+Ôö£ ãÆ /api/admin/stats
+Ôö£ ãÆ /api/admin/users
+Ôö£ ãÆ /api/admin/verifications
+Ôö£ ãÆ /api/admin/verifications/[id]
+Ôö£ ãÆ /api/admin/verify-seller
+Ôö£ ãÆ /api/auth/[...nextauth]
+Ôö£ ãÆ /api/auth/register
+Ôö£ ãÆ /api/buyer/orders
+Ôö£ ãÆ /api/buyer/orders/[id]
+Ôö£ ãÆ /api/buyer/reviews
+Ôö£ ãÆ /api/buyer/saved
+Ôö£ ãÆ /api/buyer/saved/[productId]
+Ôö£ ãÆ /api/cart
+Ôö£ ãÆ /api/messages
+Ôö£ ãÆ /api/notifications
+Ôö£ ãÆ /api/orders
+Ôö£ ãÆ /api/products
+Ôö£ ãÆ /api/products/[id]
+Ôö£ ãÆ /api/seller/analytics
+Ôö£ ãÆ /api/seller/dashboard
+Ôö£ ãÆ /api/seller/orders
+Ôö£ ãÆ /api/seller/orders/[id]
+Ôö£ ãÆ /api/seller/products
+Ôö£ ãÆ /api/seller/products/[id]
+Ôö£ ãÆ /api/seller/profile
+Ôö£ ãÆ /api/seller/reviews
+Ôö£ ãÆ /api/seller/services
+Ôö£ ãÆ /api/seller/services/[id]
+Ôö£ ãÆ /api/seller/verification
+Ôö£ ãÆ /api/sellers
+Ôö£ ãÆ /api/sellers/[id]
+Ôö£ ãÆ /api/sellers/[id]/reviews
+Ôö£ ãÆ /api/service-orders
+Ôö£ ãÆ /api/services
+Ôö£ ãÆ /api/services/[id]
+Ôö£ ãÆ /api/services/[id]/reviews
+Ôö£ ãÆ /api/upload
+Ôö£ ãÆ /api/user/change-password
+Ôö£ ãÆ /api/user/password
+Ôö£ ãÆ /api/user/profile
+Ôö£ ãÆ /api/wishlist
+Ôö£ Ôùï /blog
+Ôö£ Ôùï /browse
+Ôö£ Ôùï /cart
+Ôö£ Ôùï /checkout
+Ôö£ Ôùï /code-of-conduct
+Ôö£ Ôùï /community
+Ôö£ Ôùï /contact
+Ôö£ ãÆ /dashboard/admin
+Ôö£ ãÆ /dashboard/admin/settings
+Ôö£ ãÆ /dashboard/admin/users
+Ôö£ ãÆ /dashboard/admin/verifications
+Ôö£ Ôùï /dashboard/buyer
+Ôö£ Ôùï /dashboard/buyer/messages
+Ôö£ Ôùï /dashboard/buyer/notifications
+Ôö£ Ôùï /dashboard/buyer/orders
+Ôö£ ãÆ /dashboard/buyer/orders/[id]
+Ôö£ ãÆ /dashboard/buyer/review/[orderId]
+Ôö£ Ôùï /dashboard/buyer/saved
+Ôö£ Ôùï /dashboard/buyer/settings
+Ôö£ ãÆ /dashboard/seller
+Ôö£ ãÆ /dashboard/seller/analytics
+Ôö£ ãÆ /dashboard/seller/messages
+Ôö£ ãÆ /dashboard/seller/notifications
+Ôö£ ãÆ /dashboard/seller/orders
+Ôö£ ãÆ /dashboard/seller/orders/[id]
+Ôö£ ãÆ /dashboard/seller/products
+Ôö£ ãÆ /dashboard/seller/products/add
+Ôö£ ãÆ /dashboard/seller/products/edit/[id]
+Ôö£ ãÆ /dashboard/seller/profile
+Ôö£ ãÆ /dashboard/seller/reviews
+Ôö£ ãÆ /dashboard/seller/services
+Ôö£ ãÆ /dashboard/seller/services/add
+Ôö£ ãÆ /dashboard/seller/services/edit/[id]
+Ôö£ ãÆ /dashboard/seller/settings
+Ôö£ ãÆ /dashboard/seller/verification
+Ôö£ Ôùï /help
+Ôö£ Ôùï /how-to-buy
+Ôö£ Ôùï /login
+Ôö£ Ôùï /messages
+Ôö£ Ôùï /payments
+Ôö£ Ôùï /privacy
+Ôö£ ãÆ /product/[id]
+Ôö£ Ôùï /products
+Ôö£ ãÆ /products/[id]
+Ôö£ Ôùï /register
+Ôö£ Ôùï /register/buyer
+Ôö£ Ôùï /register/seller
+Ôö£ Ôùï /returns
+Ôö£ Ôùï /sell
+Ôö£ ãÆ /seller/[id]
+Ôö£ Ôùï /seller/setup
+Ôö£ Ôùï /services
+Ôö£ ãÆ /services/[id]
+Ôö£ Ôùï /terms
+Ôöö Ôùï /verified-sellers
+
+
+ãÆ Proxy (Middleware)
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

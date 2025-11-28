@@ -2,10 +2,10 @@
 
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function BuyerMessagesPage() {
+function BuyerMessagesContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const sellerId = searchParams.get('seller');
@@ -300,5 +300,46 @@ export default function BuyerMessagesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function BuyerMessagesLoading() {
+  return (
+    <div className="h-[calc(100vh-120px)]">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Messages</h1>
+      <div className="grid grid-cols-12 gap-6 h-full">
+        <div className="col-span-4 bg-white rounded-xl border border-gray-200 animate-pulse">
+          <div className="p-4 border-b border-gray-200">
+            <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+          </div>
+          <div className="p-4 space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-200"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="col-span-8 bg-white rounded-xl border border-gray-200 animate-pulse">
+          <div className="p-4 border-b border-gray-200">
+            <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Wrap with Suspense to handle useSearchParams
+export default function BuyerMessagesPage() {
+  return (
+    <Suspense fallback={<BuyerMessagesLoading />}>
+      <BuyerMessagesContent />
+    </Suspense>
   );
 }

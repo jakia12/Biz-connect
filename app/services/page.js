@@ -11,10 +11,10 @@ import ServiceCard from '@/components/service/ServiceCard';
 import { staggerContainer } from '@/utils/animations';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function ServicesPage() {
+function ServicesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -359,5 +359,39 @@ export default function ServicesPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function ServicesLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 font-body">
+      <Navbar />
+      <section className="relative bg-gradient-to-r from-primary via-primary-dark to-primary text-white py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-5xl font-bold mb-6 font-heading">Find the Perfect Service</h1>
+            <p className="text-xl opacity-90 mb-8">Loading services...</p>
+          </div>
+        </div>
+      </section>
+      <div className="container mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-gray-100 rounded-lg h-80 animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Wrap with Suspense to handle useSearchParams
+export default function ServicesPage() {
+  return (
+    <Suspense fallback={<ServicesLoading />}>
+      <ServicesContent />
+    </Suspense>
   );
 }

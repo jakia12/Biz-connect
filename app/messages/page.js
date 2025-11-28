@@ -2,9 +2,9 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
-export default function MessagesRedirect() {
+function MessagesRedirectContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,5 +39,20 @@ export default function MessagesRedirect() {
         <p className="text-gray-600">Redirecting to messages...</p>
       </div>
     </div>
+  );
+}
+
+export default function MessagesRedirect() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <MessagesRedirectContent />
+    </Suspense>
   );
 }

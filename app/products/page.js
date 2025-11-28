@@ -9,10 +9,10 @@ import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
 import ProductCard from '@/components/product/ProductCard';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get('category');
   
@@ -299,5 +299,43 @@ export default function ProductsPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function ProductsLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 font-body">
+      <Navbar />
+      <section className="relative bg-gradient-to-br from-primary via-primary-dark to-primary text-white py-20">
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-5xl font-bold mb-6 font-heading">Wholesale Products</h1>
+            <p className="text-xl opacity-90 mb-8">Loading products...</p>
+          </div>
+        </div>
+      </section>
+      <div className="container mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-4 animate-pulse">
+              <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
+              <div className="bg-gray-200 h-4 rounded mb-2"></div>
+              <div className="bg-gray-200 h-4 rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Wrap with Suspense to handle useSearchParams
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<ProductsLoading />}>
+      <ProductsContent />
+    </Suspense>
   );
 }
