@@ -12,18 +12,19 @@ import TopServiceSellers from '@/components/home/TopServiceSellers';
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
 import ProductCard from '@/components/product/ProductCard';
+import ServiceCard from '@/components/service/ServiceCard';
 import Button from '@/components/ui/Button';
 import { fadeInUp, scaleIn, staggerContainer } from '@/utils/animations';
 import { motion } from 'framer-motion';
 import {
-    ArrowRight,
-    Award,
-    Briefcase,
-    Package,
-    ShieldCheck,
-    ShoppingBag,
-    Sparkles,
-    TrendingUp
+  ArrowRight,
+  Award,
+  Briefcase,
+  Package,
+  ShieldCheck,
+  ShoppingBag,
+  Sparkles,
+  TrendingUp
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -279,7 +280,7 @@ export default function HomePage() {
           ) : featuredServices.length > 0 ? (
             featuredServices.map((service) => (
               <motion.div key={service._id} variants={fadeInUp}>
-                <ProductCard product={service} type="service" />
+                <ServiceCard service={service} />
               </motion.div>
             ))
           ) : (

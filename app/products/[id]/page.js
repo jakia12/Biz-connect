@@ -7,60 +7,58 @@
 
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
-import { useCart } from '@/context/CartContext';
+import { useAddToCartMutation, useGetCartQuery } from '@/lib/redux/features/cartApi';
+import { useGetProductByIdQuery } from '@/lib/redux/features/productsApi';
+import { useAddToWishlistMutation, useGetWishlistQuery } from '@/lib/redux/features/wishlistApi';
 import { Heart, RotateCcw, Share2, ShieldCheck, ShoppingCart, Star, TruckIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { use, useEffect, useState } from 'react';
+import { use, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function ProductDetailsPage({ params }) {
   const unwrappedParams = use(params);
   const productId = unwrappedParams.id;
 
-  const [product, setProduct] = useState(null);
-  const [reviews, setReviews] = useState([]);
-  const [reviewStats, setReviewStats] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  const { addToCart, cart } = useCart();
-  const [addingToCart, setAddingToCart] = useState(false);
+  // RTK Query hooks
+  const { data: productData, isLoading: loading, error } = useGetProductByIdQuery(productId);
+  const { data: cartData } = useGetCartQuery();
+  const { data: wishlistData } = useGetWishlistQuery();
+  const [addToCart, { isLoading: addingToCart }] = useAddToCartMutation();
+  const [addToWishlist, { isLoading: addingToWishlist }] = useAddToWishlistMutation();
 
-  useEffect(() => {
-    fetchProduct();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]);
-
-  const fetchProduct = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/products/${productId}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setProduct(data.product);
-        setReviews(data.reviews || []);
-        setReviewStats(data.reviewStats || null);
-      } else {
-        toast.error('Product not found');
-      }
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      toast.error('Failed to load product');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const product = productData?.product;
+  const reviews = productData?.reviews || [];
+  const reviewStats = productData?.reviewStats || null;
+  const cart = cartData?.cart;
 
   const handleAddToCart = async () => {
     if (!product) return;
     
-    setAddingToCart(true);
-    // Pass product data for optimistic update
-    await addToCart(product._id, quantity, product);
-    setAddingToCart(false);
+    try {
+      await addToCart({ productId: product._id, quantity, productData: product }).unwrap();
+      toast.success('Added to cart');
+    } catch (error) {
+      toast.error(error?.data?.error || 'Failed to add to cart');
+    }
+  };
+
+  const handleAddToWishlist = async () => {
+    if (!product) return;
+    
+    try {
+      await addToWishlist(product._id).unwrap();
+      toast.success('Added to wishlist');
+    } catch (error) {
+      if (error?.data?.alreadyExists) {
+        toast.error('Already in wishlist');
+      } else {
+        toast.error(error?.data?.error || 'Failed to add to wishlist');
+      }
+    }
   };
 
   const handleBuyNow = () => {
@@ -301,9 +299,13 @@ export default function ProductDetailsPage({ params }) {
 
             {/* Additional Actions */}
             <div className="flex gap-3">
-              <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg hover:border-primary hover:text-primary transition-colors">
+              <button 
+                onClick={handleAddToWishlist}
+                disabled={addingToWishlist}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+              >
                 <Heart className="w-5 h-5" />
-                <span className="font-medium">Save</span>
+                <span className="font-medium">{addingToWishlist ? 'Saving...' : 'Save'}</span>
               </button>
               <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg hover:border-primary hover:text-primary transition-colors">
                 <Share2 className="w-5 h-5" />
@@ -476,7 +478,7 @@ export default function ProductDetailsPage({ params }) {
                     Visit Store
                   </button>
                 </Link>
-                <Link href="/messages">
+                <Link href={`/dashboard/buyer/messages?seller=${product.sellerId._id}`}>
                   <button className="px-6 py-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl font-bold hover:shadow-lg transition-all duration-300 shadow-md">
                     Contact Seller
                   </button>

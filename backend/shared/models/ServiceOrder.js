@@ -69,20 +69,17 @@ const ServiceOrderSchema = new mongoose.Schema(
     serviceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Service',
-      required: true,
-      index: true
+      required: true
     },
     buyerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      index: true
+      required: true
     },
     sellerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      index: true
+      required: true
     },
     
     // Package details
@@ -114,8 +111,7 @@ const ServiceOrderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ['pending', 'in-progress', 'delivered', 'revision', 'completed', 'cancelled'],
-      default: 'pending',
-      index: true
+      default: 'pending'
     },
     
     // Payment
@@ -185,8 +181,6 @@ ServiceOrderSchema.pre('save', function(next) {
 // Indexes
 ServiceOrderSchema.index({ buyerId: 1, status: 1 });
 ServiceOrderSchema.index({ sellerId: 1, status: 1 });
-ServiceOrderSchema.index({ serviceId: 1 });
-ServiceOrderSchema.index({ orderId: 1 });
 
 const ServiceOrder = mongoose.models.ServiceOrder || mongoose.model('ServiceOrder', ServiceOrderSchema);
 

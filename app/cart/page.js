@@ -1,6 +1,6 @@
 /**
  * Shopping Cart Page
- * View and manage cart items - Connected to API
+ * View and manage cart items - Using RTK Query
  */
 
 'use client';
@@ -9,105 +9,52 @@ import Button from '@/components/ui/Button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
+import {
+    useClearCartMutation,
+    useGetCartQuery,
+    useRemoveFromCartMutation,
+    useUpdateCartQuantityMutation,
+} from '@/lib/redux/features/cartApi';
 
 export default function CartPage() {
   const router = useRouter();
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
+  const { data: cartData, isLoading: loading } = useGetCartQuery();
+  const [updateQuantity, { isLoading: updating }] = useUpdateCartQuantityMutation();
+  const [removeFromCart] = useRemoveFromCartMutation();
+  const [clearCartMutation] = useClearCartMutation();
 
-  useEffect(() => {
-    fetchCart();
-  }, []);
+  const cart = cartData?.cart;
 
-  const fetchCart = async () => {
-    try {
-      const response = await fetch('/api/cart');
-      const data = await response.json();
-      if (data.success) {
-        // Filter out items with null productId (deleted products)
-        const validItems = data.cart.items.filter(item => item.productId !== null);
-        const invalidCount = data.cart.items.length - validItems.length;
-        
-        if (invalidCount > 0) {
-          toast.error(`${invalidCount} unavailable item(s) removed from cart`);
-          // Update cart with only valid items
-          setCart({
-            ...data.cart,
-            items: validItems,
-            itemCount: validItems.length,
-            total: validItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-          });
-        } else {
-          setCart(data.cart);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching cart:', error);
-      toast.error('Failed to load cart');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateQuantity = async (productId, newQuantity) => {
+  const handleUpdateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
     
     try {
-      setUpdating(true);
-      const response = await fetch('/api/cart', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, quantity: newQuantity }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setCart(data.cart);
-        toast.success('Cart updated');
-      } else {
-        toast.error(data.error || 'Failed to update');
-      }
+      await updateQuantity({ productId, quantity: newQuantity }).unwrap();
+      toast.success('Cart updated');
     } catch (error) {
-      toast.error('Failed to update cart');
-    } finally {
-      setUpdating(false);
+      toast.error(error?.data?.error || 'Failed to update cart');
     }
   };
 
-  const removeItem = async (productId) => {
+  const handleRemoveItem = async (productId) => {
     try {
-      const response = await fetch(`/api/cart?productId=${productId}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setCart(data.cart);
-        toast.success('Item removed');
-      } else {
-        toast.error(data.error || 'Failed to remove');
-      }
+      await removeFromCart(productId).unwrap();
+      toast.success('Item removed');
     } catch (error) {
-      toast.error('Failed to remove item');
+      toast.error(error?.data?.error || 'Failed to remove item');
     }
   };
 
-  const clearCart = async () => {
+  const handleClearCart = async () => {
     if (!confirm('Clear entire cart?')) return;
 
     try {
-      const response = await fetch('/api/cart', { method: 'DELETE' });
-      const data = await response.json();
-      if (data.success) {
-        setCart(data.cart);
-        toast.success('Cart cleared');
-      }
+      await clearCartMutation().unwrap();
+      toast.success('Cart cleared');
     } catch (error) {
       toast.error('Failed to clear cart');
     }
@@ -160,7 +107,7 @@ export default function CartPage() {
                 <div className="bg-white rounded-xl p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold">Cart Items ({cart.itemCount})</h2>
-                    <button onClick={clearCart} className="text-red-600 hover:text-red-700 text-sm font-medium">
+                    <button onClick={handleClearCart} className="text-red-600 hover:text-red-700 text-sm font-medium">
                       Clear Cart
                     </button>
                   </div>
@@ -188,7 +135,7 @@ export default function CartPage() {
                           <div className="flex items-center gap-3">
                             <div className="flex items-center border border-gray-300 rounded-lg">
                               <button
-                                onClick={() => updateQuantity(item.productId._id, item.quantity - 1)}
+                                onClick={() => handleUpdateQuantity(item.productId._id, item.quantity - 1)}
                                 disabled={updating || item.quantity <= 1}
                                 className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
                               >
@@ -196,7 +143,7 @@ export default function CartPage() {
                               </button>
                               <span className="px-4 py-1 border-x border-gray-300">{item.quantity}</span>
                               <button
-                                onClick={() => updateQuantity(item.productId._id, item.quantity + 1)}
+                                onClick={() => handleUpdateQuantity(item.productId._id, item.quantity + 1)}
                                 disabled={updating || item.quantity >= (item.productId?.stock || 0)}
                                 className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
                               >
@@ -205,7 +152,7 @@ export default function CartPage() {
                             </div>
 
                             <button
-                              onClick={() => removeItem(item.productId._id)}
+                              onClick={() => handleRemoveItem(item.productId._id)}
                               className="text-red-600 hover:text-red-700 text-sm"
                             >
                               Remove

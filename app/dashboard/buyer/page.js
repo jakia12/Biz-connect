@@ -2,57 +2,33 @@
 
 import ProductCard from '@/components/product/ProductCard';
 import Button from '@/components/ui/Button';
-import { useWishlist } from '@/context/WishlistContext';
+import { useGetOrdersQuery } from '@/lib/redux/features/ordersApi';
+import { useGetWishlistQuery } from '@/lib/redux/features/wishlistApi';
 import { motion } from 'framer-motion';
 import { CheckCircle, Clock, Heart, LogOut, MessageSquare, Package, Settings, ShoppingBag, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
 
 export default function BuyerDashboard() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    total: 0,
-    inProgress: 0,
-    completed: 0
+  // RTK Query hooks
+  const { data: wishlistData = [] } = useGetWishlistQuery();
+  const { data: ordersData, isLoading: loadingOrders } = useGetOrdersQuery('buyer', {
+    pollingInterval: 30000, // Poll every 30 seconds for real-time updates
   });
-  
-  const { wishlist } = useWishlist();
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  const orders = ordersData?.orders || [];
+  const wishlist = wishlistData;
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/buyer/orders?limit=5');
-      const data = await response.json();
+  // Calculate stats from orders data
+  const total = ordersData?.pagination?.total || orders.length;
+  const inProgress = orders.filter(o => 
+    ['pending', 'processing', 'shipped'].includes(o.status)
+  ).length;
+  const completed = orders.filter(o => 
+    o.status === 'delivered'
+  ).length;
 
-      if (data.success) {
-        setOrders(data.orders || []);
-        
-        // Calculate stats
-        const total = data.pagination?.total || 0;
-        const inProgress = data.orders?.filter(o => 
-          ['pending', 'processing', 'shipped'].includes(o.status)
-        ).length || 0;
-        const completed = data.orders?.filter(o => 
-          o.status === 'delivered'
-        ).length || 0;
-
-        setStats({ total, inProgress, completed });
-      } else {
-        toast.error(data.error || 'Failed to fetch orders');
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast.error('Failed to fetch orders');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const stats = { total, inProgress, completed };
+  const loading = loadingOrders;
 
   const getStatusBadge = (status) => {
     const styles = {

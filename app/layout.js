@@ -1,6 +1,5 @@
+import ReduxProvider from "@/components/ReduxProvider";
 import SessionProvider from "@/components/SessionProvider";
-import { CartProvider } from "@/context/CartContext";
-import { WishlistProvider } from "@/context/WishlistContext";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from 'react-hot-toast';
 import "./globals.css";
@@ -27,12 +26,10 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
-          <WishlistProvider>
-            <CartProvider>
-              {children}
-              <Toaster position="top-right" />
-            </CartProvider>
-          </WishlistProvider>
+          <ReduxProvider>
+            {children}
+            <Toaster position="top-right" />
+          </ReduxProvider>
         </SessionProvider>
       </body>
     </html>

@@ -38,7 +38,7 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['buyer', 'seller'],
+      enum: ['buyer', 'seller', 'admin'],
       required: [true, 'Role is required'],
       default: 'buyer',
     },

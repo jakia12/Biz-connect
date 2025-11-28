@@ -5,15 +5,14 @@
 
 'use client';
 
-import { useCart } from '@/context/CartContext';
-import { useWishlist } from '@/context/WishlistContext';
+import { useAddToCartMutation, useGetCartQuery } from '@/lib/redux/features/cartApi';
+import { useAddToWishlistMutation, useGetWishlistQuery, useRemoveFromWishlistMutation } from '@/lib/redux/features/wishlistApi';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Zap } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function ProductCard({ product, className = '', type = 'product' }) {
@@ -21,37 +20,72 @@ export default function ProductCard({ product, className = '', type = 'product' 
     id,
     _id,
     title,
-    price,
+    price: productPrice,
     originalPrice,
     discount,
-    image,
+    image: productImage,
+    images,
+    coverImage,
+    packages,
     rating,
     reviews,
     sold,
     badge
   } = product;
 
+  const isService = type === 'service';
+  
+  // Derive display values based on type
+  const price = isService 
+    ? (packages?.[0]?.price || 0) 
+    : (productPrice || 0);
+    
+  const image = isService
+    ? (coverImage || images?.[0] || '/images/placeholder-service.jpg')
+    : (productImage || images?.[0] || '/images/placeholder-product.jpg');
+
   const productId = id || _id;
   const { data: session } = useSession();
   const router = useRouter();
-  const { isInWishlist, toggleWishlist } = useWishlist();
-  const { addToCart, cart } = useCart();
-  const [isTogglingWishlist, setIsTogglingWishlist] = useState(false);
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  
+  // RTK Query hooks
+  const { data: cartData } = useGetCartQuery();
+  const { data: wishlistData = [] } = useGetWishlistQuery();
+  const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation();
+  const [addToWishlist, { isLoading: isAddingToWishlist }] = useAddToWishlistMutation();
+  const [removeFromWishlist, { isLoading: isRemovingFromWishlist }] = useRemoveFromWishlistMutation();
+  
+  const cart = cartData?.cart;
+  const isTogglingWishlist = isAddingToWishlist || isRemovingFromWishlist;
   
   // Check if product is already in cart
   const isInCart = cart?.items?.some(item => 
     item.productId?._id === productId || item.productId === productId
   );
   
-  const inWishlist = isInWishlist(productId);
+  const inWishlist = wishlistData.some(item => 
+    item.productId?._id === productId || item.productId === productId
+  );
 
   const handleWishlistClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsTogglingWishlist(true);
-    await toggleWishlist(productId);
-    setIsTogglingWishlist(false);
+    
+    try {
+      if (inWishlist) {
+        await removeFromWishlist(productId).unwrap();
+        toast.success('Removed from wishlist');
+      } else {
+        await addToWishlist(productId).unwrap();
+        toast.success('Added to wishlist');
+      }
+    } catch (error) {
+      if (!inWishlist && error?.data?.alreadyExists) {
+        toast.error('Already in wishlist');
+      } else {
+        toast.error('Failed to update wishlist');
+      }
+    }
   };
 
   const handleAddToCart = async (e) => {
@@ -63,19 +97,19 @@ export default function ProductCard({ product, className = '', type = 'product' 
       return;
     }
     
-    setIsAddingToCart(true);
-    
-    // Prepare product data for cart
-    const productData = {
-      title,
-      price,
-      image,
-    };
-    
-    // Add to cart using CartContext
-    const success = await addToCart(productId, 1, productData);
-    
-    setIsAddingToCart(false);
+    try {
+      // Prepare product data for optimistic update
+      const productData = {
+        title,
+        price,
+        image,
+      };
+      
+      await addToCart({ productId, quantity: 1, productData }).unwrap();
+      toast.success('Added to cart');
+    } catch (error) {
+      toast.error(error?.data?.error || 'Failed to add to cart');
+    }
   };
 
   const handleOrderNow = (e) => {
@@ -95,8 +129,6 @@ export default function ProductCard({ product, className = '', type = 'product' 
 
   // Calculate discount if not provided but original price exists
   const discountPercent = discount || (originalPrice ? `-${Math.round(((originalPrice - price) / originalPrice) * 100)}%` : null);
-
-  const isService = type === 'service';
 
   return (
     <motion.div 

@@ -7,16 +7,23 @@
 
 import ProductCard from '@/components/product/ProductCard';
 import Button from '@/components/ui/Button';
-import { useWishlist } from '@/context/WishlistContext';
+import { useGetWishlistQuery, useRemoveFromWishlistMutation } from '@/lib/redux/features/wishlistApi';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 export default function SavedItemsPage() {
-  const { wishlist, loading, removeFromWishlist } = useWishlist();
+  const { data: wishlistData = [], isLoading: loading } = useGetWishlistQuery();
+  const [removeFromWishlist] = useRemoveFromWishlistMutation();
+
+  const wishlist = wishlistData;
 
   const handleRemove = async (productId) => {
-    const success = await removeFromWishlist(productId);
-    // Toast is already shown in the context
+    try {
+      await removeFromWishlist(productId).unwrap();
+      toast.success('Removed from wishlist');
+    } catch (error) {
+      toast.error('Failed to remove item');
+    }
   };
 
   const handleClearAll = async () => {
@@ -79,6 +86,7 @@ export default function SavedItemsPage() {
           {wishlist.map((item) => {
             const product = item.productId;
             const productId = product?._id || product;
+            const isService = product?.packages?.length > 0 || product?.coverImage;
             
             return (
               <div key={item._id} className="relative">
@@ -87,8 +95,8 @@ export default function SavedItemsPage() {
                     id: productId,
                     ...product,
                     seller: product?.sellerId,
-                    image: product?.images?.[0] || 'https://via.placeholder.com/400',
-                  }} 
+                  }}
+                  type={isService ? 'service' : 'product'}
                 />
                 <button
                   onClick={() => handleRemove(productId)}

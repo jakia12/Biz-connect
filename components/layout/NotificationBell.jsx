@@ -1,21 +1,25 @@
 'use client';
 
+import { useGetNotificationsQuery, useMarkAllAsReadMutation, useMarkAsReadMutation } from '@/lib/redux/features/notificationsApi';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 export default function NotificationBell({ role }) {
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
 
-  useEffect(() => {
-    fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  // RTK Query with polling every 30 seconds
+  const { data: notificationsData = [] } = useGetNotificationsQuery(undefined, {
+    pollingInterval: 30000, // Poll every 30 seconds
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
+  
+  const [markAsRead] = useMarkAsReadMutation();
+  const [markAllAsRead, { isLoading: markingAllAsRead }] = useMarkAllAsReadMutation();
+
+  const notifications = notificationsData.slice(0, 5); // Show only 5 in dropdown
+  const unreadCount = notificationsData.filter(n => !n.isRead && !n.read).length;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -28,51 +32,19 @@ export default function NotificationBell({ role }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchNotifications = async () => {
+  const handleMarkAsRead = async (notificationId) => {
     try {
-      const response = await fetch('/api/notifications?limit=5');
-      const data = await response.json();
-      if (data.success) {
-        setNotifications(data.notifications);
-        setUnreadCount(data.unreadCount);
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  };
-
-  const markAsRead = async (notificationId) => {
-    try {
-      const response = await fetch('/api/notifications', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notificationId }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        fetchNotifications();
-      }
+      await markAsRead(notificationId).unwrap();
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
   };
 
-  const markAllAsRead = async () => {
+  const handleMarkAllAsRead = async () => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/notifications', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markAll: true }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        fetchNotifications();
-      }
+      await markAllAsRead().unwrap();
     } catch (error) {
       console.error('Error marking all as read:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -122,8 +94,8 @@ export default function NotificationBell({ role }) {
             <h3 className="font-bold text-gray-900">Notifications</h3>
             {unreadCount > 0 && (
               <button
-                onClick={markAllAsRead}
-                disabled={loading}
+                onClick={handleMarkAllAsRead}
+                disabled={markingAllAsRead}
                 className="text-xs text-primary hover:text-primary-dark font-medium"
               >
                 Mark all as read
@@ -144,13 +116,13 @@ export default function NotificationBell({ role }) {
                 <div
                   key={notification._id}
                   onClick={() => {
-                    if (!notification.isRead) {
-                      markAsRead(notification._id);
+                    if (!notification.isRead && !notification.read) {
+                      handleMarkAsRead(notification._id);
                     }
                     setIsOpen(false);
                   }}
                   className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
-                    !notification.isRead ? 'bg-blue-50' : ''
+                    !notification.isRead && !notification.read ? 'bg-blue-50' : ''
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -160,7 +132,7 @@ export default function NotificationBell({ role }) {
                       <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                       <p className="text-xs text-gray-400 mt-1">{getTimeAgo(notification.createdAt)}</p>
                     </div>
-                    {!notification.isRead && (
+                    {(!notification.isRead && !notification.read) && (
                       <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
                     )}
                   </div>

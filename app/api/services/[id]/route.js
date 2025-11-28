@@ -18,9 +18,16 @@ export async function GET(request, { params }) {
       );
     }
     
+    // Store the seller ID before it gets populated
+    const sellerIdString = service.sellerId._id || service.sellerId;
+    
     return Response.json({
       success: true,
-      service
+      service: {
+        ...service,
+        sellerId: sellerIdString, // Keep the ID as a string
+        seller: service.sellerId, // Map populated sellerId to seller object
+      }
     });
   } catch (error) {
     console.error('Error fetching service:', error);

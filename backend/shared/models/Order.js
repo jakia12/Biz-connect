@@ -168,7 +168,6 @@ OrderSchema.pre('save', function () {
 // Index for faster queries
 OrderSchema.index({ buyerId: 1, createdAt: -1 });
 OrderSchema.index({ sellerId: 1, createdAt: -1 });
-OrderSchema.index({ orderId: 1 });
 OrderSchema.index({ status: 1 });
 
 // Prevent model recompilation in development

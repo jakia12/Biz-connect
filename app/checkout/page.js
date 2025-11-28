@@ -3,7 +3,8 @@
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
 import Button from '@/components/ui/Button';
-import { useCart } from '@/context/CartContext';
+import { useClearCartMutation, useGetCartQuery } from '@/lib/redux/features/cartApi';
+import { useCreateOrderMutation } from '@/lib/redux/features/ordersApi';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -12,7 +13,13 @@ export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const serviceId = searchParams.get('serviceId');
-  const { cart, clearCart } = useCart();
+  
+  // RTK Query hooks
+  const { data: cartData } = useGetCartQuery();
+  const [clearCart] = useClearCartMutation();
+  const [createOrder, { isLoading: creatingOrder }] = useCreateOrderMutation();
+  
+  const cart = cartData?.cart;
   
   const [loading, setLoading] = useState(false);
   const [service, setService] = useState(null);
@@ -152,56 +159,28 @@ export default function CheckoutPage() {
         toast.error('Some items are no longer available and will be skipped');
       }
 
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          shippingAddress,
-          paymentMethod: formData.paymentMethod,
-          items: validItems.map(item => ({
-            productId: item.productId._id,
-            quantity: item.quantity,
-            price: item.price
-          })),
-          totalAmount: cart.total + 50 + (cart.total * 0.05)
-        }),
-      });
+      const orderData = {
+        shippingAddress,
+        paymentMethod: formData.paymentMethod,
+        items: validItems.map(item => ({
+          productId: item.productId._id,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        totalAmount: cart.total + 50 + (cart.total * 0.05)
+      };
 
-      let data;
-      try {
-        const text = await response.text();
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          console.error('Failed to parse response:', text);
-          throw new Error('Server returned invalid response');
-        }
-      } catch (e) {
-        console.error('Response processing error:', e);
-        throw new Error('Failed to process server response');
-      }
+      const result = await createOrder(orderData).unwrap();
 
-      if (response.ok && data.success) {
+      if (result.success) {
         toast.success('Order placed successfully!');
-        console.log('[Checkout] Clearing cart...');
-        const cartCleared = await clearCart();
-        console.log('[Checkout] Cart cleared:', cartCleared);
-        if (!cartCleared) {
-          console.warn('[Checkout] Cart clearing failed, but order was successful');
-        }
-        router.push(`/orders/${data.order._id}`);
-      } else {
-        console.error('Order error:', data);
-        let details = data.details;
-        if (Array.isArray(details)) {
-          details = details.join(', ');
-        }
-        const errorMsg = details ? `${data.error}: ${details}` : data.error;
-        toast.error(errorMsg || 'Failed to place order');
+        // Cart is automatically cleared by RTK Query invalidation
+        router.push(`/orders/${result.order._id}`);
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error(error.message || 'Something went wrong. Please try again.');
+      const errorMsg = error?.data?.error || error.message || 'Something went wrong. Please try again.';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

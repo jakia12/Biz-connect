@@ -3,9 +3,22 @@
  * Wraps all seller dashboard pages with sidebar
  */
 
+import { authOptions } from '@/backend/shared/config/auth';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
 
-export default function SellerDashboardLayout({ children }) {
+export default async function SellerDashboardLayout({ children }) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    redirect('/login');
+  }
+
+  if (session.user.role !== 'seller' && session.user.role !== 'admin') {
+    redirect('/dashboard/buyer');
+  }
+
   return (
     <DashboardLayout role="seller">
       {children}

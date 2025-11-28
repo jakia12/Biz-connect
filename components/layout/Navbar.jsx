@@ -5,7 +5,8 @@
 
 'use client';
 
-import { useCart } from '@/context/CartContext';
+import { useGetCartQuery } from '@/lib/redux/features/cartApi';
+import { useGetWishlistQuery } from '@/lib/redux/features/wishlistApi';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -19,8 +20,12 @@ export default function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const searchRef = useRef(null);
-  const { cart } = useCart();
+  const { data: cartData } = useGetCartQuery();
+  const { data: wishlistData = [] } = useGetWishlistQuery();
   const { data: session } = useSession();
+  
+  const cart = cartData?.cart;
+  const wishlistCount = wishlistData.length;
 
   const categories = [
     { name: "Food & Beverage", icon: "🍔", type: "product" },
@@ -301,28 +306,123 @@ export default function Navbar() {
 
           {/* Icons (Clean) */}
           <div className="flex items-center gap-8">
-            <Link href="/wishlist" className="relative group flex flex-col items-center gap-1">
+            {/* Role Switcher - Only show if user is logged in */}
+            {session && (
+              <div className="relative group">
+                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-700">
+                    {session.user.role === 'seller' ? 'Seller Mode' : session.user.role === 'admin' ? 'Admin Mode' : 'Buyer Mode'}
+                  </span>
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Dropdown */}
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white shadow-xl border border-gray-100 rounded-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="p-2">
+                    <p className="px-3 py-2 text-xs font-medium text-gray-500 uppercase">Switch to</p>
+                    
+                    {/* Always show buyer dashboard - everyone can browse/buy */}
+                    {session.user.role !== 'buyer' && (
+                      <Link 
+                        href="/dashboard/buyer"
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        <div>
+                          <div className="font-medium">Buyer Dashboard</div>
+                          <div className="text-xs text-gray-500">Browse & purchase</div>
+                        </div>
+                      </Link>
+                    )}
+
+                    {/* Only show seller dashboard if user is a seller or admin */}
+                    {session.user.role === 'seller' && session.user.role !== 'seller' && (
+                      <Link 
+                        href="/dashboard/seller"
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <div>
+                          <div className="font-medium">Seller Dashboard</div>
+                          <div className="text-xs text-gray-500">Manage your business</div>
+                        </div>
+                      </Link>
+                    )}
+
+                    {/* Only show admin dashboard if user is admin */}
+                    {session.user.role === 'admin' && (
+                      <>
+                        <Link 
+                          href="/dashboard/seller"
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          <div>
+                            <div className="font-medium">Seller Dashboard</div>
+                            <div className="text-xs text-gray-500">Manage your business</div>
+                          </div>
+                        </Link>
+                        <Link 
+                          href="/dashboard/admin"
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                        >
+                          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                          <div>
+                            <div className="font-medium">Admin Dashboard</div>
+                            <div className="text-xs text-gray-500">Platform management</div>
+                          </div>
+                        </Link>
+                      </>
+                    )}
+
+                    {/* Message if no other dashboards available */}
+                    {session.user.role === 'buyer' && (
+                      <div className="px-3 py-4 text-center">
+                        <p className="text-xs text-gray-500 mb-2">Want to sell on BizConnect?</p>
+                        <Link 
+                          href="/register?role=seller"
+                          className="text-xs font-medium text-primary hover:text-primary-dark"
+                        >
+                          Create Seller Account →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Link href="/dashboard/buyer/saved" className="relative group flex flex-col items-center gap-1">
               <div className="relative p-1">
                 <svg className="w-6 h-6 text-gray-600 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                    {wishlistCount > 9 ? '9+' : wishlistCount}
+                  </span>
+                )}
               </div>
               <span className="text-[10px] font-medium text-gray-500 group-hover:text-primary transition-colors">Saved</span>
             </Link>
             
-            <Link href="/messages" className="relative group flex flex-col items-center gap-1">
-              <div className="relative p-1">
-                <svg className="w-6 h-6 text-gray-600 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-white"></span>
-              </div>
-              <span className="text-[10px] font-medium text-gray-500 group-hover:text-primary transition-colors">Chat</span>
-            </Link>
+
 
             {/* Notification Bell */}
-            <NotificationBell />
+          
 
             <Link href="/cart" className="relative group flex flex-col items-center gap-1">
               <div className="relative p-1">
@@ -337,6 +437,7 @@ export default function Navbar() {
               </div>
               <span className="text-[10px] font-medium text-gray-500 group-hover:text-primary transition-colors">Cart</span>
             </Link>
+              <NotificationBell />
           </div>
         </div>
       </div>

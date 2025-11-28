@@ -72,8 +72,7 @@ const ServiceSchema = new mongoose.Schema(
     sellerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      index: true
+      required: true
     },
     title: {
       type: String,
@@ -83,8 +82,7 @@ const ServiceSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      required: [true, 'Category is required'],
-      index: true
+      required: [true, 'Category is required']
     },
     subcategory: {
       type: String,
@@ -189,7 +187,6 @@ ServiceSchema.pre('save', async function() {
 ServiceSchema.index({ sellerId: 1, status: 1 });
 ServiceSchema.index({ category: 1, status: 1 });
 ServiceSchema.index({ rating: -1, orders: -1 });
-ServiceSchema.index({ slug: 1 });
 
 const Service = mongoose.models.Service || mongoose.model('Service', ServiceSchema);
 

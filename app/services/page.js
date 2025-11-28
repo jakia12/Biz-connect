@@ -7,8 +7,8 @@
 
 import Footer from '@/components/layout/Footer';
 import Navbar from '@/components/layout/Navbar';
-import ProductCard from '@/components/product/ProductCard';
-import { fadeInUp, staggerContainer } from '@/utils/animations';
+import ServiceCard from '@/components/service/ServiceCard';
+import { staggerContainer } from '@/utils/animations';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -302,11 +302,14 @@ export default function ServicesPage() {
                   <div key={i} className="bg-gray-100 rounded-lg h-80 animate-pulse"></div>
                 ))
               ) : services.length > 0 ? (
-                services.map((service) => (
-                  <motion.div key={service._id} variants={fadeInUp}>
-                    <ProductCard product={service} type="service" />
-                  </motion.div>
-                ))
+                services.map((service) => {
+                  console.log('Rendering service:', service);
+                  return (
+                    <div key={service._id} className="mb-6">
+                      <ServiceCard service={service} />
+                    </div>
+                  );
+                })
               ) : (
                 <div className="col-span-3 text-center py-10">
                   <div className="text-gray-400 mb-4 text-6xl">🔍</div>

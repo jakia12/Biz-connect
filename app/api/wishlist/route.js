@@ -60,10 +60,17 @@ export async function POST(request) {
       return Response.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
-    // Check if product exists
+
+    // Check if product or service exists
     const product = await Product.findById(productId);
+    
+    // If not a product, check if it's a service
     if (!product) {
-      return Response.json({ error: 'Product not found' }, { status: 404 });
+      const Service = (await import('@/backend/shared/models/Service')).default;
+      const service = await Service.findById(productId);
+      if (!service) {
+        return Response.json({ error: 'Product or service not found' }, { status: 404 });
+      }
     }
 
     // Check if already in wishlist

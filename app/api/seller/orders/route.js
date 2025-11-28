@@ -6,11 +6,12 @@
 import { authOptions } from '@/backend/shared/config/auth';
 import connectDB from '@/backend/shared/config/database';
 import Order from '@/backend/shared/models/Order';
+import ServiceOrder from '@/backend/shared/models/ServiceOrder';
 import { getServerSession } from 'next-auth';
 
 /**
  * GET /api/seller/orders
- * Fetch all orders for the logged-in seller
+ * Fetch all orders (products + services) for the logged-in seller
  */
 export async function GET(request) {
   try {
@@ -36,24 +37,40 @@ export async function GET(request) {
       query.status = status;
     }
 
-    // Fetch orders with buyer info
-    const orders = await Order.find(query)
+    // Fetch PRODUCT orders
+    const productOrders = await Order.find(query)
       .populate('buyerId', 'name email phone')
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
       .lean();
 
-    const totalOrders = await Order.countDocuments(query);
+    // Fetch SERVICE orders
+    const serviceOrders = await ServiceOrder.find(query)
+      .populate('buyerId', 'name email phone')
+      .populate('serviceId', 'title coverImage category')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Combine and mark order types
+    const allOrders = [
+      ...productOrders.map(order => ({ ...order, orderType: 'product' })),
+      ...serviceOrders.map(order => ({ ...order, orderType: 'service' }))
+    ];
+
+    // Sort by creation date
+    allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Apply pagination
+    const paginatedOrders = allOrders.slice(skip, skip + limit);
+    const totalOrders = allOrders.length;
 
     return Response.json({
       success: true,
-      orders,
+      orders: paginatedOrders,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalOrders / limit),
         totalOrders,
-        hasMore: skip + orders.length < totalOrders,
+        hasMore: skip + paginatedOrders.length < totalOrders,
       },
     });
   } catch (error) {
@@ -64,3 +81,4 @@ export async function GET(request) {
     );
   }
 }
+

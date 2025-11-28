@@ -107,7 +107,34 @@ export default function DashboardLayout({ children, role = 'buyer' }) {
     },
   ];
 
-  const menuItems = role === 'seller' ? sellerMenuItems : buyerMenuItems;
+  const adminMenuItems = [
+    { 
+      icon: '📊', 
+      label: 'Dashboard', 
+      href: '/dashboard/admin',
+      path: '/dashboard/admin'
+    },
+    { 
+      icon: '👥', 
+      label: 'Manage Users', 
+      href: '/dashboard/admin/users',
+      path: '/dashboard/admin/users'
+    },
+    { 
+      icon: '✅', 
+      label: 'Verifications', 
+      href: '/dashboard/admin/verifications',
+      path: '/dashboard/admin/verifications'
+    },
+    { 
+      icon: '⚙️', 
+      label: 'Settings', 
+      href: '/dashboard/admin/settings',
+      path: '/dashboard/admin/settings'
+    },
+  ];
+
+  const menuItems = role === 'seller' ? sellerMenuItems : role === 'admin' ? adminMenuItems : buyerMenuItems;
 
   const isActive = (itemPath) => {
     if (itemPath === '/dashboard/buyer' || itemPath === '/dashboard/seller') {
@@ -294,7 +321,7 @@ export default function DashboardLayout({ children, role = 'buyer' }) {
                 <p className="text-sm opacity-90 mb-1">Welcome back,</p>
                 <h3 className="font-bold text-lg truncate">{userName}</h3>
                 <p className="text-xs opacity-75 mt-1">
-                  {role === 'seller' ? 'Seller Account' : 'Buyer Account'}
+                  {role === 'seller' ? 'Seller Account' : role === 'admin' ? 'Admin Account' : 'Buyer Account'}
                 </p>
               </div>
             </div>
