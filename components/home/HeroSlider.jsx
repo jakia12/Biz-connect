@@ -21,7 +21,7 @@ export default function HeroSlider() {
       image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=1920&h=800&fit=crop",
       cta: "Browse Designers",
       link: "/services/design",
-      color: "from-blue-600 to-cyan-600"
+      color: "cyan-600"
     },
     {
       title: "Wholesale Products",
@@ -30,7 +30,7 @@ export default function HeroSlider() {
       image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&h=800&fit=crop",
       cta: "Shop Wholesale",
       link: "/products",
-      color: "from-blue-600 to-cyan-600"
+      color: "cyan-600"
     },
     {
       title: "Digital Marketing Experts",
@@ -39,7 +39,7 @@ export default function HeroSlider() {
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&h=800&fit=crop",
       cta: "Find Marketers",
       link: "/services/marketing",
-      color: "from-blue-600 to-cyan-600"
+      color: "cyan-600"
     },
     {
       title: "Web Development Services",
@@ -48,7 +48,7 @@ export default function HeroSlider() {
       image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1920&h=800&fit=crop",
       cta: "Hire Developers",
       link: "/services/development",
-      color: "from-blue-600 to-cyan-600"
+      color: "cyan-600"
     }
   ];
 
