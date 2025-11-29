@@ -6,7 +6,7 @@ import ServiceReviews from '@/components/service/ServiceReviews';
 import Button from '@/components/ui/Button';
 import { useGetServiceByIdQuery } from '@/lib/redux/features/servicesApi';
 import { useAddToWishlistMutation, useGetWishlistQuery, useRemoveFromWishlistMutation } from '@/lib/redux/features/wishlistApi';
-import { Check, Clock, Heart, RefreshCw, Star, User } from 'lucide-react';
+import { Check, Clock, Heart, RefreshCw, Share2, Star, User } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -261,6 +261,25 @@ export default function ServiceDetailsPage() {
                   >
                     <Heart className={`w-4 h-4 ${inWishlist ? 'fill-red-500 text-red-500' : ''}`} />
                     {inWishlist ? 'Saved to Wishlist' : 'Save to Wishlist'}
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: service.title,
+                          text: `Check out this service: ${service.title} on BizConnect!`,
+                          url: window.location.href,
+                        }).catch(console.error);
+                      } else {
+                        navigator.clipboard.writeText(window.location.href);
+                        toast.success('Link copied to clipboard!');
+                      }
+                    }}
+                    className="w-full py-2 flex items-center justify-center gap-2 text-gray-500 hover:text-primary transition-colors font-medium border border-gray-200 rounded-lg hover:bg-gray-50 mt-3"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share Service
                   </button>
                 </div>
               </div>

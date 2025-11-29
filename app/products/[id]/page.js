@@ -109,6 +109,23 @@ export default function ProductDetailsPage({ params }) {
     item.productId._id === product._id || item.productId === product._id
   );
 
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.title,
+          text: `Check out ${product.title} on BizConnect!`,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success('Link copied to clipboard!');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -307,7 +324,10 @@ export default function ProductDetailsPage({ params }) {
                 <Heart className="w-5 h-5" />
                 <span className="font-medium">{addingToWishlist ? 'Saving...' : 'Save'}</span>
               </button>
-              <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg hover:border-primary hover:text-primary transition-colors">
+              <button 
+                onClick={handleShare}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-lg hover:border-primary hover:text-primary transition-colors"
+              >
                 <Share2 className="w-5 h-5" />
                 <span className="font-medium">Share</span>
               </button>
