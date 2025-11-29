@@ -93,6 +93,12 @@ export default function DashboardLayout({ children, role = 'buyer' }) {
       href: '/dashboard/seller/messages',
       path: '/dashboard/seller/messages'
     },
+        { 
+      icon: '✅', 
+      label: 'Verification', 
+      href: '/dashboard/seller/verification',
+      path: '/dashboard/seller/verification'
+    },
     { 
       icon: '📈', 
       label: 'Analytics', 
