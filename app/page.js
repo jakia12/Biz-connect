@@ -36,6 +36,8 @@ export default function HomePage() {
   const [verifiedSellers, setVerifiedSellers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [categoryStats, setCategoryStats] = useState({ products: {}, services: {} });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -59,6 +61,16 @@ export default function HomePage() {
         if (sellersData.success) {
           setVerifiedSellers(sellersData.sellers);
         }
+
+        // Fetch category stats
+        const statsRes = await fetch('/api/categories/stats');
+        const statsData = await statsRes.json();
+        if (statsData.success) {
+          setCategoryStats({
+            products: statsData.productCounts,
+            services: statsData.serviceCounts
+          });
+        }
       } catch (error) {
         console.error('Error fetching home data:', error);
       } finally {
@@ -73,55 +85,59 @@ export default function HomePage() {
     { 
       name: "Graphics & Design", 
       image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&h=300&fit=crop",
-      count: "450+"
+      count: `${categoryStats.services["Graphics & Design"] || 0}+`
     },
     { 
       name: "Digital Marketing", 
       image: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&h=300&fit=crop",
-      count: "280+"
+      count: `${categoryStats.services["Digital Marketing"] || 0}+`
     },
     { 
       name: "Web Development", 
       image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=300&fit=crop",
-      count: "320+"
+      count: `${categoryStats.services["Web Development"] || 0}+`
     },
     { 
       name: "Content Writing", 
       image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=300&fit=crop",
-      count: "200+"
+      count: `${categoryStats.services["Content Writing"] || 0}+`
     },
     { 
       name: "Video & Animation", 
       image: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400&h=300&fit=crop",
-      count: "150+"
+      count: `${categoryStats.services["Video & Animation"] || 0}+`
     },
     { 
       name: "Business Consulting", 
       image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop",
-      count: "180+"
+      count: `${categoryStats.services["Business Consulting"] || 0}+`
     },
   ];
 
   const productCategories = [
     { 
       name: "Fashion & Apparel", 
+      dbName: "Fashion",
       image: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=300&fit=crop",
-      count: "850+"
+      count: `${categoryStats.products["Fashion"] || 0}+`
     },
     { 
       name: "Food & Beverage", 
+      dbName: "Food & Beverage",
       image: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=400&h=300&fit=crop",
-      count: "620+"
+      count: `${categoryStats.products["Food & Beverage"] || 0}+`
     },
     { 
       name: "Handmade Crafts", 
+      dbName: "Other", // Assuming Handmade Crafts might be under Other or need a new category
       image: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=400&h=300&fit=crop",
-      count: "450+"
+      count: `${categoryStats.products["Other"] || 0}+`
     },
     { 
       name: "Electronics", 
+      dbName: "Electronics",
       image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=300&fit=crop",
-      count: "380+"
+      count: `${categoryStats.products["Electronics"] || 0}+`
     },
   ];
 

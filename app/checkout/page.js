@@ -175,7 +175,7 @@ function CheckoutContent() {
       if (result.success) {
         toast.success('Order placed successfully!');
         // Cart is automatically cleared by RTK Query invalidation
-        router.push(`/orders/${result.order._id}`);
+        router.push(`/dashboard/buyer/orders`);
       }
     } catch (error) {
       console.error('Checkout error:', error);

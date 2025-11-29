@@ -92,6 +92,12 @@ export default function ProductCard({ product, className = '', type = 'product' 
     e.preventDefault();
     e.stopPropagation();
     
+    if (!session) {
+      toast.error('Please login to add to cart');
+      router.push('/login');
+      return;
+    }
+
     if (isInCart) {
       toast.error('Item already in cart');
       return;

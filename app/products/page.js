@@ -25,6 +25,8 @@ function ProductsContent() {
   const [filters, setFilters] = useState({
     minPrice: '',
     maxPrice: '',
+    inStock: false,
+    maxMoq: '',
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
@@ -56,6 +58,8 @@ function ProductsContent() {
 
       if (filters.minPrice) params.append('minPrice', filters.minPrice);
       if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+      if (filters.inStock) params.append('inStock', 'true');
+      if (filters.maxMoq) params.append('maxMoq', filters.maxMoq);
       if (searchQuery) params.append('search', searchQuery);
 
       const response = await fetch(`/api/products?${params}`);
@@ -195,6 +199,43 @@ function ProductsContent() {
                     className="w-full bg-primary text-white py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors"
                   >
                     Apply
+                  </button>
+                </div>
+              </div>
+
+              {/* Availability */}
+              <div className="mb-6">
+                <h4 className="font-bold text-gray-900 mb-4">Availability</h4>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox"
+                    checked={filters.inStock}
+                    onChange={(e) => setFilters({...filters, inStock: e.target.checked})}
+                    className="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                  />
+                  <span className="text-gray-700">In Stock Only</span>
+                </label>
+              </div>
+
+              {/* Min Order Quantity */}
+              <div className="mb-6">
+                <h4 className="font-bold text-gray-900 mb-4">Min Order Quantity</h4>
+                <div className="space-y-2">
+                  <input 
+                    type="number"
+                    placeholder="Max MOQ (e.g. 50)"
+                    value={filters.maxMoq}
+                    onChange={(e) => setFilters({...filters, maxMoq: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary"
+                  />
+                  <button
+                    onClick={() => {
+                      setCurrentPage(1);
+                      fetchProducts();
+                    }}
+                    className="w-full bg-primary text-white py-2 rounded-lg font-medium hover:bg-primary-dark transition-colors"
+                  >
+                    Apply Filters
                   </button>
                 </div>
               </div>

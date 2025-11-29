@@ -28,6 +28,8 @@ export async function GET(request) {
     const maxPrice = searchParams.get('maxPrice');
     const search = searchParams.get('search');
     const sellerId = searchParams.get('sellerId'); // Add seller filter
+    const inStock = searchParams.get('inStock');
+    const maxMoq = searchParams.get('maxMoq');
     
     // Sorting
     const sort = searchParams.get('sort') || 'createdAt';
@@ -48,6 +50,16 @@ export async function GET(request) {
       query.price = {};
       if (minPrice) query.price.$gte = parseFloat(minPrice);
       if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+    }
+
+
+
+    if (inStock === 'true') {
+      query.stock = { $gt: 0 };
+    }
+
+    if (maxMoq) {
+      query.minOrderQuantity = { $lte: parseInt(maxMoq) };
     }
 
     if (search) {
